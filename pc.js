@@ -1,7 +1,8 @@
 // PC 화면: 코드를 입력해 사진을 보고, 받고, 지웁니다.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getStorage, ref, listAll, getMetadata, getDownloadURL, deleteObject }
+import { getStorage, ref, listAll, getMetadata, getDownloadURL, deleteObject, getBlob }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
+import { makeZip } from "./zip.js";
 
 const APP = window.APP;
 const $ = (id) => document.getElementById(id);
@@ -90,7 +91,10 @@ function render() {
 function updateBar() {
   const n = photos.filter((p) => p.checked).length;
   $("count").textContent = `사진 ${photos.length}장` + (n ? ` · ${n}장 선택` : "");
-  $("dlSel").textContent = n ? `선택한 ${n}장 받기` : "전체 받기";
+  if (!zipping) $("dlZip").textContent = n ? `${n}장 압축파일로 받기` : "전체 압축파일로 받기";
+  $("dlSel").textContent = n ? `${n}장 하나씩 받기` : "전체 하나씩 받기";
+  $("dlZip").disabled = zipping || photos.length === 0;
+  $("dlSel").disabled = photos.length === 0;
   $("delSel").disabled = n === 0;
   $("selAll").textContent = n === photos.length && n > 0 ? "선택 해제" : "전체 선택";
 }
@@ -114,6 +118,52 @@ async function download(list) {
 $("dlSel").addEventListener("click", () => {
   const sel = photos.filter((p) => p.checked);
   download(sel.length ? sel : photos);
+});
+// 압축파일로 받기: 사진을 모두 내려받아 ZIP 하나로 묶습니다.
+let zipping = false;
+function uniqueName(name, used) {
+  let n = name, i = 2;
+  const dot = name.lastIndexOf(".");
+  const base = dot > 0 ? name.slice(0, dot) : name, ext = dot > 0 ? name.slice(dot) : "";
+  while (used.has(n.toLowerCase())) n = `${base} (${i++})${ext}`;
+  used.add(n.toLowerCase());
+  return n;
+}
+$("dlZip").addEventListener("click", async () => {
+  const sel = photos.filter((p) => p.checked);
+  const list = sel.length ? sel : photos;
+  if (!list.length || zipping) return;
+  zipping = true;
+  $("zipMsg").hidden = true;
+  const btn = $("dlZip");
+  btn.disabled = true;
+  try {
+    const used = new Set(), files = [];
+    for (let i = 0; i < list.length; i++) {
+      btn.textContent = `묶는 중 ${i + 1} / ${list.length}`;
+      const blob = await getBlob(list[i].ref);
+      files.push({
+        name: uniqueName(list[i].name, used),
+        data: new Uint8Array(await blob.arrayBuffer()),
+        date: new Date(list[i].time)
+      });
+    }
+    const zip = makeZip(files);
+    const d = new Date(), p2 = (n) => String(n).padStart(2, "0");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(zip);
+    a.download = `${APP.name}_${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}_${list.length}장.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  } catch (e) {
+    console.error(e);
+    $("zipMsg").textContent = "압축파일을 만들지 못했습니다. \"하나씩 받기\"를 이용하세요. (" + (e.code || e.message) + ")";
+    $("zipMsg").hidden = false;
+  }
+  zipping = false;
+  updateBar();
 });
 $("delSel").addEventListener("click", async () => {
   const sel = photos.filter((p) => p.checked);
