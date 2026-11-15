@@ -40,7 +40,7 @@ let code = loadCode();
 const pretty = (c) => c.slice(0, 4) + "-" + c.slice(4);
 function showCode() { $("code").textContent = pretty(code); $("doneCode").textContent = pretty(code); }
 showCode();
-$("pcUrl").textContent = new URL("pc.html", location.href).href;
+$("pcUrl").textContent = new URL("./", location.href).href.replace(/^https?:\/\//, "");
 
 $("newCode").addEventListener("click", () => {
   if (!confirm("새 코드를 만들까요?\n이전 코드로 올린 사진은 이전 코드로만 볼 수 있습니다.")) return;
