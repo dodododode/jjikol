@@ -2,13 +2,6 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <script>
-    // 폰으로 열면 바로 올리기 화면으로 갑니다. (홈페이지를 보려면 주소 끝에 ?home=1)
-    (function () {
-      var phone = /Android|iPhone|iPod|Mobile/i.test(navigator.userAgent);
-      if (phone && !/[?&]home=1/.test(location.search)) location.replace("upload.html");
-    })();
-  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#131a2b">
   <meta name="description" content="출장·현장 사진을 폰에서 올리고 PC에서 바로 받는 가장 쉬운 방법">
