@@ -67,6 +67,16 @@ header.top a{font-size:14px; color:var(--accent); font-weight:600; text-decorati
 .done-box b{font-size:17px}
 .url{word-break:break-all; font-weight:700}
 
+/* 알림창 */
+.overlay{position:fixed; inset:0; background:rgba(15,25,35,.55); display:flex; align-items:center; justify-content:center; padding:20px; z-index:10}
+.dialog{background:#fff; border-radius:18px; padding:24px 20px 20px; width:100%; max-width:360px; text-align:center}
+.dialog .check{width:56px; height:56px; border-radius:28px; background:var(--ok); color:#fff; font-size:30px; line-height:56px; margin:0 auto 12px}
+.dialog .check.warn{background:var(--bad)}
+.dialog > b{font-size:19px; display:block}
+.dialog p{margin:10px 0 0; font-size:15px; color:var(--sub)}
+.dialog p b{color:var(--ink); letter-spacing:.06em}
+.dialog .btn{margin-top:18px}
+
 /* PC 화면 */
 .code-form{display:flex; gap:10px; flex-wrap:wrap}
 .code-form input{

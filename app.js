@@ -145,16 +145,23 @@ function refresh() {
 
   // 모두 끝났을 때: 결과를 알려주고, 실패가 없으면 목록을 비웁니다.
   const finished = total > 0 && busy === 0 && ready === 0;
-  if (finished && done > 0) {
+  if (finished && done > 0 && !announced) {
+    announced = true;
     $("doneTitle").textContent = fail
-      ? `${done}장 올렸고 ${fail}장은 실패했습니다. 빨간 사진을 눌러 다시 올리세요.`
+      ? `${done}장 올렸고 ${fail}장은 실패했습니다. 확인을 누른 뒤 빨간 사진을 눌러 다시 올리세요.`
       : `${done}장 모두 올렸습니다.`;
+    $("doneIcon").textContent = fail ? "!" : "✓";
+    $("doneIcon").className = fail ? "check warn" : "check";
     $("doneBox").hidden = false;
+    $("doneOk").focus();
     if (!fail) setTimeout(() => {
       if (items.every((i) => i.state === "done")) { items.length = 0; grid.innerHTML = ""; refresh(); }
     }, 1100);
   }
 }
+
+let announced = false; // 알림창은 한 번 올릴 때마다 한 번만
+$("doneOk").addEventListener("click", () => { $("doneBox").hidden = true; });
 
 // ── 올리기 ────────────────────────────────
 const MAX_PARALLEL = 3, MAX_TRIES = 3;
@@ -163,6 +170,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const safeName = (n) => (n || "photo.jpg").replace(/[^\w.\-가-힣]/g, "_").slice(-80);
 
 function pump() {
+  if (items.some((i) => i.state === "wait")) announced = false;
   while (running < MAX_PARALLEL) {
     const it = items.find((i) => i.state === "wait");
     if (!it) break;

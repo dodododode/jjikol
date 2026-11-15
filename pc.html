@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>사진 받기</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <div class="wrap wide">
@@ -40,9 +40,10 @@
     <div class="cards" id="cards"></div>
     <div class="empty" id="empty" hidden>이 코드로 올린 사진이 없습니다. 코드를 다시 확인하세요.</div>
   </section>
+  <p class="muted" style="text-align:center; font-size:12px">버전 3</p>
 </div>
 
-<script src="config.js"></script>
+<script src="config.js?v=3"></script>
 <script>
   window.__booted = false;
   setTimeout(function () {
@@ -53,6 +54,6 @@
     }
   }, 8000);
 </script>
-<script type="module" src="pc.js"></script>
+<script type="module" src="pc.js?v=3"></script>
 </body>
 </html>

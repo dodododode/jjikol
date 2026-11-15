@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <title>사진 올리기</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <div class="wrap">
@@ -50,18 +50,24 @@
     </div>
   </section>
 
-  <section class="done-box" id="doneBox" hidden>
-    <b id="doneTitle"></b>
-    <div style="margin-top:6px">PC에서 아래 주소로 접속해 코드 <b id="doneCode"></b> 를 입력하세요.</div>
-    <div class="url" id="pcUrl"></div>
-  </section>
-
   <p class="muted" style="margin-top:18px">
     올리는 동안에는 이 화면을 켜 두세요. 개인정보나 민감한 자료가 담긴 사진은 올리지 마세요.
   </p>
+  <p class="muted" style="text-align:center; font-size:12px">버전 3</p>
 </div>
 
-<script src="config.js"></script>
+<!-- 다 올렸을 때 뜨는 알림창 -->
+<div class="overlay" id="doneBox" hidden>
+  <div class="dialog" role="alertdialog" aria-labelledby="doneTitle">
+    <div class="check" id="doneIcon">✓</div>
+    <b id="doneTitle"></b>
+    <p>PC에서 아래 주소로 접속해<br>코드 <b id="doneCode"></b> 를 입력하세요.</p>
+    <p class="url" id="pcUrl"></p>
+    <button class="btn" id="doneOk" type="button">확인</button>
+  </div>
+</div>
+
+<script src="config.js?v=3"></script>
 <script>
   // 앱 본체(app.js)가 8초 안에 뜨지 않으면 안내
   window.__booted = false;
@@ -74,6 +80,6 @@
   }, 8000);
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
 </script>
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js?v=3"></script>
 </body>
 </html>

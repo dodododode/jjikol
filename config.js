@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────
 window.APP = {
   name: "찍올",
-  maxPhotos: 100,
+  maxPhotos: 100,          // 한 번에 올릴 수 있는 최대 장수
   firebase: {
     apiKey: "AIzaSyD6RYhfF9PAToTmoxkQLSxUAXeCQDTY6nA",
     authDomain: "upload-business-photo.firebaseapp.com",
