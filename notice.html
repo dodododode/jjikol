@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#131a2b">
   <title>공지사항 - 찍올</title>
-  <link rel="stylesheet" href="home.css?v=13">
+  <link rel="stylesheet" href="home.css?v=14">
 </head>
 <body>
 <div class="inner">
@@ -28,7 +28,7 @@
 
   <section class="ask">
     <h2>문의 남기기</h2>
-    <p>불편한 점이나 바라는 점을 적어 주세요. 남긴 글은 운영자만 볼 수 있고, 답변은 공지사항에 올립니다. 이름, 연락처 같은 개인정보는 적지 마세요.</p>
+    <p>불편한 점이나 바라는 점을 적어 주세요. 남긴 글과 답변은 본인만 볼 수 있습니다. 이름, 연락처 같은 개인정보는 적지 마세요.</p>
     <form id="askForm">
       <textarea id="askText" maxlength="1000" placeholder="여기에 적어 주세요." aria-label="문의 내용" required></textarea>
       <div class="row">
@@ -37,6 +37,22 @@
         <span class="msg" id="askMsg" role="status"></span>
       </div>
     </form>
+    <div class="sent" id="askSent" hidden>
+      보냈습니다. 문의번호는 <b id="askNo"></b> 입니다.<br>
+      이 기기에서는 아래 "내 문의"에서 답변을 바로 볼 수 있습니다. 다른 기기에서 확인하려면 이 번호가 필요합니다.
+    </div>
+
+    <div id="myWrap" hidden>
+      <h3>내 문의</h3>
+      <ul class="my-asks" id="myAsks"></ul>
+    </div>
+
+    <h3>문의번호로 확인</h3>
+    <form class="lookup" id="lookForm">
+      <input id="lookNo" maxlength="9" autocomplete="off" spellcheck="false" placeholder="문의번호 8자리" aria-label="문의번호">
+      <button type="submit">확인</button>
+    </form>
+    <p class="msg" id="lookMsg" role="status" style="margin-top:10px"></p>
   </section>
 </div>
 
@@ -80,41 +96,111 @@
     d.appendChild(s); d.appendChild(body); box.appendChild(d);
   });
 
-  // 문의 남기기: 운영자만 볼 수 있게 저장합니다.
-  var askForm = document.getElementById("askForm"), askText = document.getElementById("askText");
-  var askBtn = document.getElementById("askBtn"), askMsg = document.getElementById("askMsg");
-  function say(text, cls) { askMsg.textContent = text; askMsg.className = "msg " + (cls || ""); }
-  askText.addEventListener("input", function () {
-    document.getElementById("askCount").textContent = askText.value.length + " / 1000";
-  });
-  askForm.addEventListener("submit", function (e) {
+  // ── 문의 남기기 (문의번호 방식) ─────────────────────
+  // 문의번호를 아는 사람만 그 글과 답변을 볼 수 있습니다.
+  var $ = function (id) { return document.getElementById(id); };
+  var ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  function makeNo() {
+    var buf = new Uint8Array(8); crypto.getRandomValues(buf);
+    return Array.prototype.map.call(buf, function (x) { return ALPHABET[x % 32]; }).join("");
+  }
+  function pretty(no) { return no.slice(0, 4) + "-" + no.slice(4); }
+  function cleanNo(v) { return v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8); }
+  function loadMine() { try { return JSON.parse(localStorage.getItem("myAsks") || "[]"); } catch (e) { return []; } }
+  function saveMine(list) { try { localStorage.setItem("myAsks", JSON.stringify(list.slice(0, 20))); } catch (e) {} }
+  function say(el, text, cls) { el.textContent = text; el.className = "msg " + (cls || ""); }
+
+  var fb = null; // Firebase는 필요할 때 한 번만 불러옵니다.
+  function firebase() {
+    if (!fb) {
+      var base = "https://www.gstatic.com/firebasejs/10.14.1/";
+      fb = Promise.all([import(base + "firebase-app.js"), import(base + "firebase-firestore.js")]).then(function (m) {
+        var app = m[0].getApps().length ? m[0].getApp() : m[0].initializeApp(APP.firebase);
+        return { db: m[1].getFirestore(app), f: m[1] };
+      });
+      fb.catch(function () { fb = null; });
+    }
+    return fb;
+  }
+  function fetchAsk(no) {
+    return firebase().then(function (x) { return x.f.getDoc(x.f.doc(x.db, "inquiries", no)); })
+      .then(function (snap) { return snap.exists() ? snap.data() : null; });
+  }
+  function fmt(ts) {
+    if (!ts || !ts.toDate) return "";
+    var d = ts.toDate(), p = function (n) { return String(n).padStart(2, "0"); };
+    return d.getFullYear() + "." + p(d.getMonth() + 1) + "." + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+  function renderMine() {
+    var list = loadMine();
+    $("myWrap").hidden = list.length === 0;
+    $("myAsks").innerHTML = "";
+    list.forEach(function (no) {
+      var li = document.createElement("li");
+      var meta = document.createElement("div"); meta.className = "meta";
+      var n = document.createElement("span"); n.textContent = "문의번호 " + pretty(no);
+      var t = document.createElement("span");
+      meta.appendChild(n); meta.appendChild(t);
+      var q = document.createElement("div"); q.className = "q"; q.textContent = "불러오는 중…";
+      li.appendChild(meta); li.appendChild(q);
+      $("myAsks").appendChild(li);
+      fetchAsk(no).then(function (d) {
+        if (!d) { q.textContent = "이 문의를 찾을 수 없습니다."; return; }
+        t.textContent = fmt(d.createdAt);
+        q.textContent = d.text;
+        var a = document.createElement("div");
+        if (d.answer) { a.className = "a"; a.textContent = d.answer; }
+        else { a.className = "wait"; a.textContent = "답변을 기다리는 중입니다."; }
+        li.appendChild(a);
+      }).catch(function () { q.textContent = "지금은 불러올 수 없습니다. 잠시 뒤에 새로고침해 주세요."; });
+    });
+  }
+
+  $("askText").addEventListener("input", function () { $("askCount").textContent = $("askText").value.length + " / 1000"; });
+  $("askForm").addEventListener("submit", function (e) {
     e.preventDefault();
-    var text = askText.value.trim();
-    if (!text) { say("내용을 적어 주세요.", "bad"); return; }
+    var text = $("askText").value.trim(), msg = $("askMsg");
+    if (!text) { say(msg, "내용을 적어 주세요.", "bad"); return; }
     var last = 0;
     try { last = Number(localStorage.getItem("askAt") || 0); } catch (err) {}
-    if (Date.now() - last < 60000) { say("방금 보냈습니다. 1분 뒤에 다시 보낼 수 있습니다.", "bad"); return; }
-    askBtn.disabled = true;
-    say("보내는 중…");
-    var base = "https://www.gstatic.com/firebasejs/10.14.1/";
-    Promise.all([import(base + "firebase-app.js"), import(base + "firebase-firestore.js")])
-      .then(function (m) {
-        var app = m[0].getApps().length ? m[0].getApp() : m[0].initializeApp(APP.firebase);
-        var db = m[1].getFirestore(app);
-        return m[1].addDoc(m[1].collection(db, "inquiries"), { text: text, createdAt: m[1].serverTimestamp() });
-      })
-      .then(function () {
-        try { localStorage.setItem("askAt", String(Date.now())); } catch (err) {}
-        askText.value = "";
-        document.getElementById("askCount").textContent = "0 / 1000";
-        say("보냈습니다. 고맙습니다.", "ok");
-      })
-      .catch(function (err) {
-        console.error(err);
-        say("지금은 보낼 수 없습니다. 잠시 뒤에 다시 시도해 주세요.", "bad");
-      })
-      .then(function () { askBtn.disabled = false; });
+    if (Date.now() - last < 60000) { say(msg, "방금 보냈습니다. 1분 뒤에 다시 보낼 수 있습니다.", "bad"); return; }
+    $("askBtn").disabled = true;
+    say(msg, "보내는 중…");
+    var no = makeNo();
+    firebase().then(function (x) {
+      return x.f.setDoc(x.f.doc(x.db, "inquiries", no), { text: text, createdAt: x.f.serverTimestamp() });
+    }).then(function () {
+      try { localStorage.setItem("askAt", String(Date.now())); } catch (err) {}
+      saveMine([no].concat(loadMine()));
+      $("askText").value = ""; $("askCount").textContent = "0 / 1000";
+      say(msg, "");
+      $("askNo").textContent = pretty(no);
+      $("askSent").hidden = false;
+      renderMine();
+    }).catch(function (err) {
+      console.error(err);
+      say(msg, "지금은 보낼 수 없습니다. 잠시 뒤에 다시 시도해 주세요.", "bad");
+    }).then(function () { $("askBtn").disabled = false; });
   });
+
+  $("lookNo").addEventListener("input", function () {
+    var c = cleanNo($("lookNo").value);
+    $("lookNo").value = c.length > 4 ? c.slice(0, 4) + "-" + c.slice(4) : c;
+  });
+  $("lookForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var no = cleanNo($("lookNo").value), msg = $("lookMsg");
+    if (no.length !== 8) { say(msg, "문의번호는 8자리입니다.", "bad"); return; }
+    say(msg, "찾는 중…");
+    fetchAsk(no).then(function (d) {
+      if (!d) { say(msg, "그 번호의 문의를 찾을 수 없습니다.", "bad"); return; }
+      saveMine([no].concat(loadMine().filter(function (x) { return x !== no; })));
+      $("lookNo").value = ""; say(msg, "");
+      renderMine();
+      $("myWrap").scrollIntoView({ block: "nearest" });
+    }).catch(function () { say(msg, "지금은 확인할 수 없습니다. 잠시 뒤에 다시 시도해 주세요.", "bad"); });
+  });
+  renderMine();
 </script>
 </body>
 </html>
