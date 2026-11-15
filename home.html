@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#131a2b">
+  <meta name="description" content="출장·현장 사진을 폰에서 올리고 PC에서 바로 받는 가장 쉬운 방법">
+  <title>찍올 - 찍고, 올리면, 끝.</title>
+  <link rel="stylesheet" href="home.css?v=4">
+</head>
+<body>
+<div class="inner">
+  <header class="site-head">
+    <a class="logo" href="home.html"><i></i><span class="app-name">찍올</span></a>
+    <nav>
+      <a href="#how">사용방법</a>
+      <a class="opt" href="#">서비스 소개</a>
+      <a class="opt" href="#">공지사항</a>
+      <a href="index.html">폰에서 올리기</a>
+    </nav>
+  </header>
+
+  <main class="hero">
+    <div>
+      <h1><span class="w1">찍고,</span><span class="w2">올리면,</span><span class="w3">끝.</span></h1>
+      <p class="lead">출장·현장 사진을 폰에서 올리고 PC에서 바로 받으세요. 메일도, 케이블도 필요 없습니다.</p>
+      <form class="code-form" id="codeForm">
+        <input id="codeInput" autocomplete="off" spellcheck="false" maxlength="9" placeholder="코드 8자리 입력" aria-label="코드 8자리">
+        <button type="submit">사진 받기</button>
+      </form>
+      <p class="hint">코드는 폰 화면 맨 위 "내 코드"에 있습니다.</p>
+    </div>
+
+    <div class="stage-wrap" aria-hidden="true">
+      <div class="stage">
+        <div class="blob"></div>
+        <svg class="arc" viewBox="0 0 480 420"><path d="M80 290 C 120 60, 250 60, 345 110" fill="none" stroke="#131a2b" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round"/></svg>
+        <div class="monitor"><div class="check"></div></div>
+        <div class="phone"><div class="view"></div><div class="shutter"></div><div class="flash"></div></div>
+        <div class="photo"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<section class="how" id="how">
+  <div class="inner">
+    <h2>이렇게 씁니다</h2>
+    <ol class="steps">
+      <li><b>찍고 고르기</b><p>폰에서 사진을 찍거나 고릅니다. 한 번에 100장까지 됩니다.</p></li>
+      <li><b>올리기</b><p>사진마다 진행 상황이 보입니다. 끊기면 자동으로 다시 올리고, 잘 올라간 사진은 화면에서 사라집니다.</p></li>
+      <li><b>PC에서 받기</b><p>코드를 입력해 한 장씩 또는 압축파일로 받습니다. 받은 사진은 서버에서 바로 지워집니다.</p></li>
+    </ol>
+    <div class="phone-link"><span>폰에서는 이 주소로 접속하세요.</span><a id="phoneUrl" href="index.html"></a></div>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="inner">
+    <div class="row"><span><b>만든이</b> 준비 중</span><span><b>문의</b> 준비 중</span></div>
+    <div>개인정보나 민감한 자료가 담긴 사진은 올리지 마세요. 코드를 아는 사람은 그 코드로 올린 사진을 볼 수 있습니다.</div>
+  </div>
+</footer>
+
+<script src="config.js?v=4"></script>
+<script>
+  // 앱 이름은 config.js 한 곳에서 바꿉니다.
+  if (window.APP) {
+    document.querySelectorAll(".app-name").forEach(function (el) { el.textContent = APP.name; });
+    document.title = APP.name + " - 찍고, 올리면, 끝.";
+  }
+  var u = new URL("index.html", location.href).href;
+  document.getElementById("phoneUrl").textContent = u.replace(/^https?:\/\//, "").replace(/index\.html$/, "");
+  var input = document.getElementById("codeInput");
+  function clean(v) { return v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8); }
+  input.addEventListener("input", function () {
+    var c = clean(input.value);
+    input.value = c.length > 4 ? c.slice(0, 4) + "-" + c.slice(4) : c;
+  });
+  document.getElementById("codeForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var c = clean(input.value);
+    if (c.length !== 8) { input.focus(); input.setCustomValidity("코드는 8자리입니다."); input.reportValidity(); input.setCustomValidity(""); return; }
+    location.href = "pc.html?code=" + c;
+  });
+</script>
+</body>
+</html>

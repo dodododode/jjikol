@@ -221,3 +221,13 @@ $("delSel").addEventListener("click", async () => {
   if (failed.length) alert(`${failed.length}장은 지우지 못했습니다.`);
   load();
 });
+
+// 홈페이지에서 코드를 입력하고 넘어온 경우 바로 사진을 보여줍니다.
+{
+  const q = clean(new URLSearchParams(location.search).get("code") || "");
+  if (q.length === 8) {
+    $("codeInput").value = q.slice(0, 4) + "-" + q.slice(4);
+    code = q;
+    load();
+  }
+}
