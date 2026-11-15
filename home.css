@@ -115,3 +115,59 @@ a{color:inherit}
   .stage-wrap{height:300px; overflow:hidden}
   .stage{transform:scale(.7); transform-origin:top center}
 }
+
+/* ── 사용방법 페이지 ───────────────────── */
+.page-title{padding:36px 0 8px}
+.page-title h1{margin:0; font-size:clamp(44px,6vw,84px); font-weight:900; letter-spacing:-.04em; line-height:1.05}
+.page-title p{margin:14px 0 0; font-size:19px; color:var(--sub); word-break:keep-all}
+.site-head nav a[aria-current]{color:var(--blue)}
+.guide{list-style:none; margin:0; padding:20px 0 40px; counter-reset:g}
+.guide > li{counter-increment:g; display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:40px; align-items:center; padding:44px 0; border-top:1px solid var(--line)}
+.guide > li:first-child{border-top:0}
+.guide h2{margin:0 0 12px; font-size:32px; font-weight:900; letter-spacing:-.03em; display:flex; align-items:center; gap:14px}
+.guide h2::before{content:counter(g); flex:none; width:46px; height:46px; border-radius:50%; background:var(--yellow); border:2.5px solid var(--ink); font-size:22px; text-align:center; line-height:41px}
+.guide p{margin:0 0 10px; font-size:18px; word-break:keep-all}
+.guide ul{margin:0; padding-left:20px; color:var(--sub); font-size:16px; word-break:keep-all}
+.guide li li{margin:4px 0}
+.guide .where{display:inline-block; font-size:14px; font-weight:800; padding:3px 10px; border-radius:20px; background:var(--ink); color:#fff; margin-bottom:12px}
+
+/* 화면 그림 */
+.mock{justify-self:center; position:relative; background:#fff; border:5px solid var(--ink); font-size:12px; line-height:1.3}
+.mock.ph{width:210px; border-radius:30px; padding:18px 14px 22px}
+.mock.pc{width:330px; border-radius:16px; padding:16px; margin-bottom:26px}
+.mock.pc::after{content:""; position:absolute; left:50%; bottom:-27px; width:110px; height:22px; margin-left:-55px; background:linear-gradient(var(--ink),var(--ink)) center top/18px 16px no-repeat, linear-gradient(var(--ink),var(--ink)) center bottom/110px 6px no-repeat}
+.m-row{display:flex; gap:6px}
+.m-box{border:1.5px solid var(--line); border-radius:8px; padding:8px; margin-bottom:8px}
+.m-label{color:var(--sub); font-size:10px}
+.m-code{font-weight:900; font-size:19px; letter-spacing:.06em}
+.m-btn{flex:1; text-align:center; font-weight:800; padding:9px 4px; border-radius:8px; background:var(--ink); color:#fff}
+.m-btn.line{background:#fff; color:var(--ink); border:1.5px solid var(--ink)}
+.m-btn.blue{background:var(--blue)}
+.m-tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin:8px 0}
+.m-tile{position:relative; aspect-ratio:1; border-radius:6px; overflow:hidden; background:linear-gradient(#9cc4ff 0 58%, #19a974 58%)}
+.m-tile b{position:absolute; left:0; right:0; bottom:0; font-size:9px; text-align:center; color:#fff; padding:2px 0; background:rgba(19,26,43,.7)}
+.m-tile.ok b{background:var(--ok)}
+.m-tile.bad b{background:#d83a34}
+.m-bar{height:6px; border-radius:3px; background:#e6ebf5; overflow:hidden}
+.m-bar i{display:block; width:62%; height:100%; background:var(--blue)}
+.m-input{flex:1; border:1.5px solid var(--ink); border-radius:8px; padding:8px; font-weight:900; letter-spacing:.08em; font-size:14px}
+.m-cards{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:10px}
+.m-card{border:1.5px solid var(--line); border-radius:6px; overflow:hidden}
+.m-card i{display:block; aspect-ratio:4/3; background:linear-gradient(#9cc4ff 0 58%, #19a974 58%)}
+.m-card span{display:block; text-align:center; font-size:9px; font-weight:800; color:var(--blue); padding:3px 0}
+
+/* 자주 묻는 것 */
+.faq{background:#fff; border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:60px 0}
+.faq h2{font-size:34px; font-weight:900; letter-spacing:-.03em; margin:0 0 20px}
+.faq dl{margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 20px}
+.faq dl > div{border:2.5px solid var(--ink); border-radius:18px; padding:20px 22px}
+.faq dt{font-size:19px; font-weight:800; margin-bottom:6px}
+.faq dd{margin:0; color:var(--sub); font-size:16px; word-break:keep-all}
+.cta{padding:48px 0 12px; display:flex; flex-wrap:wrap; gap:12px}
+.cta a{display:inline-flex; align-items:center; height:58px; padding:0 28px; border-radius:14px; font-weight:800; font-size:18px; text-decoration:none; background:var(--ink); color:#fff}
+.cta a.line{background:transparent; color:var(--ink); border:2.5px solid var(--ink)}
+.cta a:hover{background:var(--blue); color:#fff; border-color:var(--blue)}
+@media (max-width:900px){
+  .guide > li{grid-template-columns:1fr; gap:24px; padding:32px 0}
+  .faq dl{grid-template-columns:1fr}
+}
