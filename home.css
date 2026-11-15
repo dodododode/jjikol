@@ -189,3 +189,29 @@ a{color:inherit}
 .care dt{font-size:19px; font-weight:800; margin:18px 0 4px}
 .care dd{margin:0; color:var(--sub); font-size:17px; word-break:keep-all}
 @media (max-width:900px){ .diff ul{grid-template-columns:1fr} .story p{font-size:19px} }
+
+/* ── 공지사항 페이지 ───────────────────── */
+.notices{padding:20px 0 72px; max-width:860px}
+.notices details{border:2.5px solid var(--ink); border-radius:18px; background:#fff; margin-bottom:14px; overflow:hidden}
+.notices summary{list-style:none; cursor:pointer; padding:20px 22px; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 16px}
+.notices summary::-webkit-details-marker{display:none}
+.notices summary time{flex:none; font-size:15px; color:var(--sub); font-variant-numeric:tabular-nums}
+.notices summary b{font-size:20px; font-weight:800; flex:1; min-width:12em; word-break:keep-all}
+.notices summary::after{content:"열기"; font-size:14px; font-weight:800; color:var(--blue)}
+.notices details[open] summary::after{content:"닫기"}
+.notices .body{padding:0 22px 22px; font-size:17px; color:var(--sub); white-space:pre-line; word-break:keep-all}
+.notices .none{color:var(--sub); font-size:18px}
+
+/* 문의 남기기 */
+.ask{max-width:860px; padding:0 0 72px}
+.ask h2{font-size:30px; font-weight:900; letter-spacing:-.03em; margin:0 0 6px}
+.ask p{margin:0 0 14px; color:var(--sub); font-size:16px; word-break:keep-all}
+.ask textarea{display:block; width:100%; min-height:150px; padding:16px; border:2.5px solid var(--ink); border-radius:14px; background:#fff; font-family:inherit; font-size:17px; line-height:1.5; color:var(--ink); resize:vertical}
+.ask .row{display:flex; align-items:center; gap:14px; margin-top:12px; flex-wrap:wrap}
+.ask button{height:56px; padding:0 28px; border:0; border-radius:14px; background:var(--ink); color:#fff; font-family:inherit; font-size:18px; font-weight:800; cursor:pointer}
+.ask button:hover{background:var(--blue)}
+.ask button[disabled]{opacity:.45; pointer-events:none}
+.ask .count{font-size:14px; color:var(--sub); font-variant-numeric:tabular-nums}
+.ask .msg{font-size:16px; font-weight:800}
+.ask .msg.ok{color:var(--ok)} .ask .msg.bad{color:#c2302a}
+.notices{padding-bottom:48px}

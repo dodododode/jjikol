@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#131a2b">
+  <title>공지사항 - 찍올</title>
+  <link rel="stylesheet" href="home.css?v=13">
+</head>
+<body>
+<div class="inner">
+  <header class="site-head">
+    <a class="logo" href="home.html"><i></i><span class="app-name">찍올</span></a>
+    <nav>
+      <a href="how.html">사용방법</a>
+      <a class="opt" href="about.html">서비스 소개</a>
+      <a class="opt" href="notice.html" aria-current="page">공지사항</a>
+      <a href="index.html">폰에서 올리기</a>
+    </nav>
+  </header>
+
+  <div class="page-title">
+    <h1>공지사항</h1>
+    <p>업데이트와 안내를 알려드립니다.</p>
+  </div>
+
+  <section class="notices" id="notices"></section>
+
+  <section class="ask">
+    <h2>문의 남기기</h2>
+    <p>불편한 점이나 바라는 점을 적어 주세요. 남긴 글은 운영자만 볼 수 있고, 답변은 공지사항에 올립니다. 이름, 연락처 같은 개인정보는 적지 마세요.</p>
+    <form id="askForm">
+      <textarea id="askText" maxlength="1000" placeholder="여기에 적어 주세요." aria-label="문의 내용" required></textarea>
+      <div class="row">
+        <button type="submit" id="askBtn">문의 보내기</button>
+        <span class="count" id="askCount">0 / 1000</span>
+        <span class="msg" id="askMsg" role="status"></span>
+      </div>
+    </form>
+  </section>
+</div>
+
+<footer class="site-foot">
+  <div class="inner">
+    <div class="row"><span><b>만든이</b> <span class="app-name">찍올</span> 운영자</span><span><b>문의</b> <a href="notice.html#askForm">공지사항의 문의 남기기</a></span></div>
+    <div class="legal">
+      <b>개인정보·민감정보가 담긴 사진은 올리지 마세요.</b>
+      <ul>
+        <li>「개인정보 보호법」은 이름, 주민등록번호, 얼굴처럼 개인을 알아볼 수 있는 정보(제2조)와 건강, 범죄경력 같은 민감정보(제23조)의 처리를 엄격히 제한합니다.</li>
+        <li>업무상 알게 된 개인정보를 누설하거나 권한 없이 다른 사람에게 제공하면 5년 이하의 징역 또는 5천만원 이하의 벌금에 처해질 수 있습니다(제59조, 제71조).</li>
+        <li>공무원은 직무상 알게 된 비밀을 지킬 의무가 있습니다(국가공무원법 제60조, 지방공무원법 제52조).</li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script src="config.js?v=8"></script>
+<script src="notices.js?v=12"></script>
+<script>
+  if (window.APP) {
+    document.querySelectorAll(".app-name").forEach(function (el) { el.textContent = APP.name; });
+    document.title = "공지사항 - " + APP.name;
+  }
+  var u = new URL("index.html", location.href).href;
+  var site = u.replace(/^https?:\/\//, "").replace(/index\.html$/, "");
+  document.querySelectorAll(".site-url").forEach(function (el) { el.textContent = site; });
+
+  // 공지 목록 그리기 (최신 글이 위로)
+  var box = document.getElementById("notices");
+  var list = (window.NOTICES || []).slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+  if (!list.length) { box.innerHTML = '<p class="none">아직 공지가 없습니다.</p>'; }
+  list.forEach(function (n, i) {
+    var d = document.createElement("details");
+    if (i === 0) d.open = true;
+    var s = document.createElement("summary");
+    var t = document.createElement("time"); t.textContent = n.date.replace(/-/g, ".");
+    var b = document.createElement("b"); b.textContent = n.title;
+    s.appendChild(t); s.appendChild(b);
+    var body = document.createElement("div"); body.className = "body"; body.textContent = n.body;
+    d.appendChild(s); d.appendChild(body); box.appendChild(d);
+  });
+
+  // 문의 남기기: 운영자만 볼 수 있게 저장합니다.
+  var askForm = document.getElementById("askForm"), askText = document.getElementById("askText");
+  var askBtn = document.getElementById("askBtn"), askMsg = document.getElementById("askMsg");
+  function say(text, cls) { askMsg.textContent = text; askMsg.className = "msg " + (cls || ""); }
+  askText.addEventListener("input", function () {
+    document.getElementById("askCount").textContent = askText.value.length + " / 1000";
+  });
+  askForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var text = askText.value.trim();
+    if (!text) { say("내용을 적어 주세요.", "bad"); return; }
+    var last = 0;
+    try { last = Number(localStorage.getItem("askAt") || 0); } catch (err) {}
+    if (Date.now() - last < 60000) { say("방금 보냈습니다. 1분 뒤에 다시 보낼 수 있습니다.", "bad"); return; }
+    askBtn.disabled = true;
+    say("보내는 중…");
+    var base = "https://www.gstatic.com/firebasejs/10.14.1/";
+    Promise.all([import(base + "firebase-app.js"), import(base + "firebase-firestore.js")])
+      .then(function (m) {
+        var app = m[0].getApps().length ? m[0].getApp() : m[0].initializeApp(APP.firebase);
+        var db = m[1].getFirestore(app);
+        return m[1].addDoc(m[1].collection(db, "inquiries"), { text: text, createdAt: m[1].serverTimestamp() });
+      })
+      .then(function () {
+        try { localStorage.setItem("askAt", String(Date.now())); } catch (err) {}
+        askText.value = "";
+        document.getElementById("askCount").textContent = "0 / 1000";
+        say("보냈습니다. 고맙습니다.", "ok");
+      })
+      .catch(function (err) {
+        console.error(err);
+        say("지금은 보낼 수 없습니다. 잠시 뒤에 다시 시도해 주세요.", "bad");
+      })
+      .then(function () { askBtn.disabled = false; });
+  });
+</script>
+</body>
+</html>
