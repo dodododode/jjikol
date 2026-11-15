@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#131a2b">
   <title>서비스 소개 - 찍올</title>
-  <link rel="stylesheet" href="home.css?v=15">
+  <link rel="stylesheet" href="home.css?v=17">
 </head>
 <body>
 <div class="inner">
@@ -66,14 +66,14 @@
 <footer class="site-foot">
   <div class="inner">
     <div class="row"><span><b>만든이</b> <span class="app-name">찍올</span> 운영자</span><span><b>문의</b> <a href="notice.html#askForm">공지사항의 문의 남기기</a></span></div>
-    <div class="legal">
-      <b>개인정보·민감정보가 담긴 사진은 올리지 마세요.</b>
+    <details class="legal" open>
+      <summary><b>개인정보·민감정보가 담긴 사진은 올리지 마세요.</b></summary>
       <ul>
         <li>「개인정보 보호법」은 이름, 주민등록번호, 얼굴처럼 개인을 알아볼 수 있는 정보(제2조)와 건강, 범죄경력 같은 민감정보(제23조)의 처리를 엄격히 제한합니다.</li>
         <li>업무상 알게 된 개인정보를 누설하거나 권한 없이 다른 사람에게 제공하면 5년 이하의 징역 또는 5천만원 이하의 벌금에 처해질 수 있습니다(제59조, 제71조).</li>
         <li>공무원은 직무상 알게 된 비밀을 지킬 의무가 있습니다(국가공무원법 제60조, 지방공무원법 제52조).</li>
       </ul>
-    </div>
+    </details>
   </div>
 </footer>
 
@@ -86,6 +86,8 @@
   var u = new URL("index.html", location.href).href;
   var site = u.replace(/^https?:\/\//, "").replace(/index\.html$/, "");
   document.querySelectorAll(".site-url").forEach(function (el) { el.textContent = site; });
+  // 폰에서는 맨 아래 법 안내를 접어 둡니다. (누르면 펼쳐집니다)
+  if (window.innerWidth < 700) document.querySelectorAll("details.legal").forEach(function (d) { d.open = false; });
 </script>
 </body>
 </html>
