@@ -1,4 +1,4 @@
-// PC 화면: 코드를 입력해 사진을 보고, 받고, 지웁니다.
+// PC 화면: 코드를 입력해 사진을 받습니다. 제대로 받은 사진은 서버에서 바로 지웁니다.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getStorage, ref, listAll, getMetadata, getDownloadURL, deleteObject, getBlob }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
@@ -18,7 +18,8 @@ if (!configured) {
 }
 
 let code = "";
-let photos = []; // { ref, name, size, time, url, el, checked }
+let photos = []; // { ref, name, size, time, url, el, checked, bad }
+let busy = false;
 
 const clean = (v) => v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
 $("codeInput").addEventListener("input", (e) => {
@@ -39,20 +40,25 @@ const fmtTime = (t) => {
   const d = new Date(t), p = (n) => String(n).padStart(2, "0");
   return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`;
 };
+const RETRY = "폰에서 다시 올려주세요";
 
 async function load() {
-  if (!configured || !code) return;
+  if (!configured || !code || busy) return;
   $("listPanel").hidden = false;
   $("cards").innerHTML = "";
   $("empty").hidden = true;
+  $("resultMsg").hidden = true;
+  $("zipMsg").hidden = true;
   $("count").textContent = "불러오는 중…";
   try {
     const res = await listAll(ref(storage, "u/" + code));
     photos = await Promise.all(res.items.map(async (r) => {
       const [m, url] = await Promise.all([getMetadata(r), getDownloadURL(r)]);
+      const size = Number(m.size);
       return {
-        ref: r, url, size: Number(m.size), time: m.timeCreated,
-        name: (m.customMetadata && m.customMetadata.originalName) || r.name, checked: false
+        ref: r, url, size, time: m.timeCreated, checked: false,
+        name: (m.customMetadata && m.customMetadata.originalName) || r.name,
+        bad: size === 0 ? "잘못 올라간 사진 · " + RETRY : ""
       };
     }));
     photos.sort((a, b) => (a.time < b.time ? 1 : -1));
@@ -63,6 +69,11 @@ async function load() {
   }
 }
 
+function paintInfo(p) {
+  const mt = p.el.querySelector(".info > div:last-child");
+  if (p.bad) { mt.className = "bad"; mt.textContent = p.bad; p.el.style.borderColor = "#b3261e"; }
+  else { mt.className = "mt"; mt.textContent = fmtSize(p.size) + " · " + fmtTime(p.time); p.el.style.borderColor = ""; }
+}
 function render() {
   const cards = $("cards");
   cards.innerHTML = "";
@@ -71,17 +82,17 @@ function render() {
     el.className = "card";
     el.innerHTML = '<div class="pic"><img loading="lazy" alt=""><input type="checkbox" aria-label="선택"></div>' +
       '<div class="info"><div class="nm"></div><div class="mt"></div></div><button type="button">받기</button>';
-    el.querySelector("img").src = p.url;
+    const img = el.querySelector("img");
+    img.addEventListener("error", () => { if (!p.bad) { p.bad = "사진이 열리지 않음 · " + RETRY; paintInfo(p); } });
+    img.src = p.url;
     el.querySelector(".nm").textContent = p.name;
-    const mt = el.querySelector(".mt");
-    if (p.size === 0) { mt.className = "bad"; mt.textContent = "0KB · 잘못 올라간 사진입니다"; }
-    else mt.textContent = fmtSize(p.size) + " · " + fmtTime(p.time);
     const box = el.querySelector("input");
-    const toggle = (v) => { p.checked = v; box.checked = v; el.classList.toggle("sel", v); updateBar(); };
-    box.addEventListener("click", (e) => { e.stopPropagation(); toggle(box.checked); });
-    el.querySelector(".pic").addEventListener("click", () => toggle(!p.checked));
-    el.querySelector("button").addEventListener("click", () => download([p]));
-    p.el = el; p.toggle = toggle;
+    p.el = el;
+    p.toggle = (v) => { p.checked = v; box.checked = v; el.classList.toggle("sel", v); updateBar(); };
+    box.addEventListener("click", (e) => { e.stopPropagation(); p.toggle(box.checked); });
+    el.querySelector(".pic").addEventListener("click", () => p.toggle(!p.checked));
+    el.querySelector("button").addEventListener("click", () => receive([p], false));
+    paintInfo(p);
     cards.appendChild(el);
   });
   $("empty").hidden = photos.length > 0;
@@ -91,11 +102,13 @@ function render() {
 function updateBar() {
   const n = photos.filter((p) => p.checked).length;
   $("count").textContent = `사진 ${photos.length}장` + (n ? ` · ${n}장 선택` : "");
-  if (!zipping) $("dlZip").textContent = n ? `${n}장 압축파일로 받기` : "전체 압축파일로 받기";
-  $("dlSel").textContent = n ? `${n}장 하나씩 받기` : "전체 하나씩 받기";
-  $("dlZip").disabled = zipping || photos.length === 0;
-  $("dlSel").disabled = photos.length === 0;
-  $("delSel").disabled = n === 0;
+  if (!busy) {
+    $("dlZip").textContent = n ? `${n}장 압축파일로 받기` : "전체 압축파일로 받기";
+    $("dlSel").textContent = n ? `${n}장 하나씩 받기` : "전체 하나씩 받기";
+  }
+  $("dlZip").disabled = busy || photos.length === 0;
+  $("dlSel").disabled = busy || photos.length === 0;
+  $("delSel").disabled = busy || n === 0;
   $("selAll").textContent = n === photos.length && n > 0 ? "선택 해제" : "전체 선택";
 }
 $("selAll").addEventListener("click", () => {
@@ -103,24 +116,7 @@ $("selAll").addEventListener("click", () => {
   photos.forEach((p) => p.toggle(!all));
 });
 
-// 올릴 때 "내려받기" 표시를 해 두었기 때문에 주소를 열면 바로 저장됩니다.
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-async function download(list) {
-  for (const p of list) {
-    const f = document.createElement("iframe");
-    f.style.display = "none";
-    f.src = p.url;
-    document.body.appendChild(f);
-    setTimeout(() => f.remove(), 60000);
-    await sleep(400);
-  }
-}
-$("dlSel").addEventListener("click", () => {
-  const sel = photos.filter((p) => p.checked);
-  download(sel.length ? sel : photos);
-});
-// 압축파일로 받기: 사진을 모두 내려받아 ZIP 하나로 묶습니다.
-let zipping = false;
+// ── 받기 ──────────────────────────────────
 function uniqueName(name, used) {
   let n = name, i = 2;
   const dot = name.lastIndexOf(".");
@@ -129,45 +125,97 @@ function uniqueName(name, used) {
   used.add(n.toLowerCase());
   return n;
 }
-$("dlZip").addEventListener("click", async () => {
-  const sel = photos.filter((p) => p.checked);
-  const list = sel.length ? sel : photos;
-  if (!list.length || zipping) return;
-  zipping = true;
+function saveBlob(blob, filename) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+}
+// 서버에서 읽어 온 크기가 올릴 때 크기와 같아야 "제대로 받은 것"으로 봅니다.
+async function fetchPhoto(p) {
+  if (p.size === 0) throw new Error("empty");
+  const blob = await getBlob(p.ref);
+  if (blob.size !== p.size) throw new Error("size-mismatch");
+  return blob;
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function receive(list, asZip) {
+  if (busy || !list.length) return;
+  busy = true;
+  $("resultMsg").hidden = true;
   $("zipMsg").hidden = true;
-  const btn = $("dlZip");
-  btn.disabled = true;
-  try {
-    const used = new Set(), files = [];
-    for (let i = 0; i < list.length; i++) {
-      btn.textContent = `묶는 중 ${i + 1} / ${list.length}`;
-      const blob = await getBlob(list[i].ref);
-      files.push({
-        name: uniqueName(list[i].name, used),
-        data: new Uint8Array(await blob.arrayBuffer()),
-        date: new Date(list[i].time)
-      });
-    }
-    const zip = makeZip(files);
-    const d = new Date(), p2 = (n) => String(n).padStart(2, "0");
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(zip);
-    a.download = `${APP.name}_${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}_${list.length}장.zip`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
-  } catch (e) {
-    console.error(e);
-    $("zipMsg").textContent = "압축파일을 만들지 못했습니다. \"하나씩 받기\"를 이용하세요. (" + (e.code || e.message) + ")";
-    $("zipMsg").hidden = false;
-  }
-  zipping = false;
   updateBar();
+  const btn = asZip ? $("dlZip") : $("dlSel");
+  const good = [], used = new Set(), files = [];
+
+  for (let i = 0; i < list.length; i++) {
+    const p = list[i];
+    btn.textContent = `받는 중 ${i + 1} / ${list.length}`;
+    try {
+      const blob = await fetchPhoto(p);
+      const name = uniqueName(p.name, used);
+      if (asZip) files.push({ name, data: new Uint8Array(await blob.arrayBuffer()), date: new Date(p.time) });
+      else { saveBlob(blob, name); await sleep(300); }
+      good.push(p);
+    } catch (e) {
+      console.error(e);
+      p.bad = "받지 못함 · " + RETRY;
+      paintInfo(p);
+    }
+  }
+
+  let saved = true;
+  if (asZip && good.length) {
+    try {
+      const d = new Date(), p2 = (n) => String(n).padStart(2, "0");
+      saveBlob(makeZip(files), `${APP.name}_${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}_${good.length}장.zip`);
+    } catch (e) {
+      console.error(e);
+      saved = false;
+      $("zipMsg").textContent = "압축파일을 만들지 못했습니다. \"하나씩 받기\"를 이용하세요. 사진은 지우지 않았습니다.";
+      $("zipMsg").hidden = false;
+    }
+  }
+
+  // 제대로 받은 사진만 서버에서 지웁니다.
+  let removed = 0;
+  if (saved && good.length) {
+    btn.textContent = "서버에서 지우는 중…";
+    await Promise.all(good.map((p) => deleteObject(p.ref).then(() => {
+      removed++;
+      p.el.remove();
+      photos.splice(photos.indexOf(p), 1);
+    }).catch((e) => console.error(e))));
+  }
+
+  const failed = list.length - good.length;
+  if (saved) {
+    let msg = good.length ? `${good.length}장을 받았고 서버에서 지웠습니다.` : "";
+    if (good.length && removed < good.length) msg = `${good.length}장을 받았습니다. ${good.length - removed}장은 서버에서 지우지 못해 남아 있습니다.`;
+    if (failed) msg += ` ${failed}장은 받지 못해 남겨두었습니다. 빨간 표시가 된 사진을 ${RETRY}.`;
+    $("resultMsg").textContent = msg.trim();
+    $("resultMsg").hidden = false;
+  }
+  busy = false;
+  $("empty").hidden = true;
+  updateBar();
+}
+
+$("dlZip").addEventListener("click", () => {
+  const sel = photos.filter((p) => p.checked);
+  receive(sel.length ? sel : photos.slice(), true);
+});
+$("dlSel").addEventListener("click", () => {
+  const sel = photos.filter((p) => p.checked);
+  receive(sel.length ? sel : photos.slice(), false);
 });
 $("delSel").addEventListener("click", async () => {
   const sel = photos.filter((p) => p.checked);
-  if (!sel.length || !confirm(`선택한 ${sel.length}장을 서버에서 지울까요? 되돌릴 수 없습니다.`)) return;
+  if (!sel.length || !confirm(`선택한 ${sel.length}장을 받지 않고 서버에서 지울까요? 되돌릴 수 없습니다.`)) return;
   const failed = [];
   await Promise.all(sel.map((p) => deleteObject(p.ref).catch(() => failed.push(p))));
   if (failed.length) alert(`${failed.length}장은 지우지 못했습니다.`);
