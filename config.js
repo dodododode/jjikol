@@ -5,13 +5,13 @@
 // ─────────────────────────────────────────────
 window.APP = {
   name: "찍올",
-  maxPhotos: 100,          // 한 번에 올릴 수 있는 최대 장수
+  maxPhotos: 100,
   firebase: {
-    apiKey: "여기에_apiKey",
-    authDomain: "여기에_authDomain",
-    projectId: "여기에_projectId",
-    storageBucket: "여기에_storageBucket",
-    messagingSenderId: "여기에_messagingSenderId",
-    appId: "여기에_appId"
+    apiKey: "AIzaSyD6RYhfF9PAToTmoxkQLSxUAXeCQDTY6nA",
+    authDomain: "upload-business-photo.firebaseapp.com",
+    projectId: "upload-business-photo",
+    storageBucket: "upload-business-photo.firebasestorage.app",
+    messagingSenderId: "509973531120",
+    appId: "1:509973531120:web:fe7f5481e2402a6abb7535"
   }
 };
