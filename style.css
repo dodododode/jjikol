@@ -60,6 +60,7 @@ header.top a{font-size:14px; color:var(--accent); font-weight:600; text-decorati
 .tile.done img{opacity:.75}
 .tile .fill{position:absolute; left:0; bottom:0; height:4px; background:#7fe3d6; width:0; transition:width .15s}
 .tile.fail{cursor:pointer}
+.tile.gone{opacity:0; transform:scale(.85); transition:opacity .35s, transform .35s}
 
 /* 완료 안내 */
 .done-box{background:var(--accent-soft); border-radius:12px; padding:14px; font-size:15px}
@@ -87,4 +88,4 @@ header.top a{font-size:14px; color:var(--accent); font-weight:600; text-decorati
 .card .info .bad{color:var(--bad); font-weight:700}
 .card button{border:0; border-top:1px solid var(--line); background:#fff; color:var(--accent); font-weight:700; padding:10px; font-family:inherit; font-size:14px; cursor:pointer; margin-top:auto}
 .empty{text-align:center; color:var(--sub); padding:36px 0}
-@media (prefers-reduced-motion:reduce){ .bar i,.tile .fill{transition:none} }
+@media (prefers-reduced-motion:reduce){ .bar i,.tile .fill,.tile.gone{transition:none} }

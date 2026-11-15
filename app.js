@@ -141,13 +141,18 @@ function refresh() {
   $("uploadBtn").textContent = ready ? `${ready}장 올리기` : "올리기";
   $("retryBtn").hidden = !fail || busy > 0;
   $("retryBtn").textContent = `실패한 ${fail}장 다시 올리기`;
-  $("clearBtn").hidden = busy > 0 || total === 0;
   $("queuePanel").hidden = total === 0;
 
+  // 모두 끝났을 때: 결과를 알려주고, 실패가 없으면 목록을 비웁니다.
   const finished = total > 0 && busy === 0 && ready === 0;
-  $("doneBox").hidden = !(finished && done > 0);
   if (finished && done > 0) {
-    $("doneTitle").textContent = fail ? `${done}장 올렸고 ${fail}장은 실패했습니다.` : `${done}장 모두 올렸습니다.`;
+    $("doneTitle").textContent = fail
+      ? `${done}장 올렸고 ${fail}장은 실패했습니다. 빨간 사진을 눌러 다시 올리세요.`
+      : `${done}장 모두 올렸습니다.`;
+    $("doneBox").hidden = false;
+    if (!fail) setTimeout(() => {
+      if (items.every((i) => i.state === "done")) { items.length = 0; grid.innerHTML = ""; refresh(); }
+    }, 1100);
   }
 }
 
@@ -171,6 +176,8 @@ async function runOne(it) {
   try {
     await uploadWithRetry(it);
     it.state = "done";
+    setTimeout(() => it.el.classList.add("gone"), 600);
+    setTimeout(() => it.el.remove(), 1000);
   } catch (e) {
     it.state = "fail";
     it.err = explain(e);
@@ -239,11 +246,6 @@ $("uploadBtn").addEventListener("click", () => {
 $("retryBtn").addEventListener("click", () => {
   items.forEach((i) => { if (i.state === "fail") i.state = "wait"; });
   refresh(); pump();
-});
-$("clearBtn").addEventListener("click", () => {
-  items.length = 0; grid.innerHTML = "";
-  $("doneBox").hidden = true;
-  refresh();
 });
 
 // 올리는 중에 화면을 닫으려 하면 경고

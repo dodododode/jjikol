@@ -34,7 +34,7 @@
     <!-- label for 방식만 사용. 자바스크립트로 click()을 호출하지 않습니다. -->
     <input id="camInput" class="file-hidden" type="file" accept="image/*" capture="environment">
     <input id="fileInput" class="file-hidden" type="file" accept="image/*" multiple>
-    <p class="muted" id="hint" style="margin:10px 0 0">찍거나 고른 사진이 아래에 번호와 함께 표시됩니다.</p>
+    <p class="muted" id="hint" style="margin:10px 0 0">찍거나 고른 사진이 아래에 표시되고, 잘 올라간 사진은 화면에서 사라집니다.</p>
   </section>
 
   <section class="panel" id="queuePanel" hidden>
@@ -47,7 +47,6 @@
     <div class="stack" style="margin-top:14px">
       <button class="btn" id="uploadBtn" type="button" disabled>올리기</button>
       <button class="btn danger" id="retryBtn" type="button" hidden>실패한 사진 다시 올리기</button>
-      <button class="btn ghost" id="clearBtn" type="button" hidden>목록 비우기</button>
     </div>
   </section>
 
