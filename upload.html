@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <title>사진 올리기</title>
-  <link rel="stylesheet" href="style.css?v=19">
+  <link rel="stylesheet" href="style.css?v=21">
 </head>
 <body>
 <div class="wrap">
@@ -34,7 +34,7 @@
     <!-- label for 방식만 사용. 자바스크립트로 click()을 호출하지 않습니다. -->
     <input id="camInput" class="file-hidden" type="file" accept="image/*" capture="environment">
     <input id="fileInput" class="file-hidden" type="file" accept="image/*" multiple>
-    <p class="muted" id="hint" style="margin:10px 0 0">올리기 전에 사진을 누르면 가릴 부분을 덮을 수 있습니다.</p>
+    <p class="muted" id="hint" style="margin:10px 0 0">올리기 전에 사진을 누르면 마스킹할 수 있습니다.</p>
   </section>
 
   <section class="panel" id="queuePanel" hidden>
@@ -53,13 +53,17 @@
   <p class="muted" style="margin-top:18px">
     올리는 동안에는 이 화면을 켜 두세요. 개인정보나 민감한 자료가 담긴 사진은 올리지 마세요.
   </p>
-  <p class="muted" style="text-align:center; font-size:13px"><a href="index.html?home=1" style="color:inherit">홈페이지 보기</a> · 버전 6</p>
+  <p class="muted" style="text-align:center; font-size:13px"><a href="index.html?home=1" style="color:inherit">홈페이지 보기</a> · 버전 8</p>
 </div>
 
 <!-- 가리기 화면 -->
 <div class="editor" id="editor" hidden>
-  <div class="ed-top" id="edTop">가릴 부분을 손가락으로 끌어 덮으세요</div>
+  <div class="ed-top" id="edTop">마스킹할 부분을 손가락으로 끌어 덮으세요</div>
   <div class="ed-stage"><canvas id="edCanvas"></canvas></div>
+  <div class="ed-auto">
+    <button type="button" id="edAuto">얼굴 자동 찾기</button>
+    <p id="edNote">자동 찾기는 제안입니다. 빠진 곳이 없는지 꼭 확인하세요. 네모를 누르면 지워집니다.</p>
+  </div>
   <div class="ed-bar">
     <button type="button" id="edUndo">되돌리기</button>
     <button type="button" id="edCancel">취소</button>
@@ -78,7 +82,7 @@
   </div>
 </div>
 
-<script src="config.js?v=19"></script>
+<script src="config.js?v=21"></script>
 <script>
   // 앱 본체(app.js)가 8초 안에 뜨지 않으면 안내
   window.__booted = false;
@@ -91,6 +95,6 @@
   }, 8000);
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
 </script>
-<script type="module" src="app.js?v=19"></script>
+<script type="module" src="app.js?v=21"></script>
 </body>
 </html>

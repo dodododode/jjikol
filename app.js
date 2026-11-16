@@ -152,12 +152,13 @@ async function openEditor(it) {
     const k = Math.min(1, 1600 / Math.max(w, h)); // 화면용은 작게
     edCanvas.width = Math.round(w * k); edCanvas.height = Math.round(h * k);
     ed = { it, src, w, h, rects: [], cur: null };
-    $("edTop").textContent = "가릴 부분을 손가락으로 끌어 덮으세요";
+    $("edTop").textContent = "마스킹할 부분을 손가락으로 끌어 덮으세요";
+    $("edNote").textContent = ED_NOTE;
     drawEditor();
   } catch (e) {
     console.error(e);
     $("editor").hidden = true;
-    alert("이 사진은 열 수 없어 가리기를 쓸 수 없습니다. (" + (e && e.message ? e.message : e) + ")");
+    alert("이 사진은 열 수 없어 마스킹을 할 수 없습니다. (" + (e && e.message ? e.message : e) + ")");
   }
   edOpening = false;
 }
@@ -170,7 +171,7 @@ function drawEditor() {
   ctx.drawImage(ed.src, 0, 0, edCanvas.width, edCanvas.height);
   paintRects(ctx, edCanvas.width, edCanvas.height, ed.cur ? ed.rects.concat([ed.cur]) : ed.rects);
   $("edUndo").disabled = ed.rects.length === 0;
-  $("edDone").textContent = ed.rects.length ? `완료 (${ed.rects.length}곳 가림)` : "완료";
+  $("edDone").textContent = ed.rects.length ? `완료 (${ed.rects.length}곳 마스킹)` : "완료";
 }
 function edPoint(e) {
   const b = edCanvas.getBoundingClientRect();
@@ -187,11 +188,100 @@ edCanvas.addEventListener("pointermove", (e) => {
 function edEnd() {
   if (!ed || !edStart) return;
   if (ed.cur && ed.cur.w > 0.01 && ed.cur.h > 0.01) ed.rects.push(ed.cur);
+  else {
+    // 끌지 않고 누르기만 했으면: 그 자리에 있는 네모를 지웁니다.
+    const p = edStart;
+    for (let i = ed.rects.length - 1; i >= 0; i--) {
+      const r = ed.rects[i];
+      if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h) { ed.rects.splice(i, 1); break; }
+    }
+  }
   ed.cur = null; edStart = null;
   drawEditor();
 }
 edCanvas.addEventListener("pointerup", edEnd);
 edCanvas.addEventListener("pointercancel", edEnd);
+// ── 얼굴 자동 찾기 (폰 안에서 처리, 사진은 밖으로 나가지 않습니다) ─────────
+const FACE_LIB = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
+const FACE_MODEL = "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite";
+let faceDetector = null;
+function getFaceDetector() {
+  if (!faceDetector) {
+    faceDetector = import(FACE_LIB + "/vision_bundle.mjs").catch(() => import(FACE_LIB)).then(async (mod) => {
+      const m = mod.FaceDetector ? mod : mod.default;
+      const vision = await m.FilesetResolver.forVisionTasks(FACE_LIB + "/wasm");
+      return m.FaceDetector.createFromOptions(vision, {
+        baseOptions: { modelAssetPath: FACE_MODEL, delegate: "CPU" },
+        runningMode: "IMAGE", minDetectionConfidence: 0.45
+      });
+    });
+    faceDetector.catch(() => { faceDetector = null; });
+  }
+  return faceDetector;
+}
+function overlap(a, b) { // 두 네모가 겹치는 정도 (0~1)
+  const x = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x));
+  const y = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+  const inter = x * y;
+  return inter / (a.w * a.h + b.w * b.h - inter || 1);
+}
+// 이 찾기 도구는 가까이 찍힌 얼굴에 맞춰져 있어서, 사진을 여러 조각으로 나눠 작은 얼굴도 찾습니다.
+async function findFaces(det, src, w, h, onStep) {
+  const found = [], tile = document.createElement("canvas"), tctx = tile.getContext("2d");
+  for (const n of [1, 2, 3, 4]) {
+    onStep(n);
+    await sleep(20); // 화면이 멈춘 것처럼 보이지 않게 잠깐 쉽니다
+    const tw = w / n, th = h / n, count = n === 1 ? 1 : 2 * n - 1;
+    const k = Math.min(1, 512 / Math.max(tw, th));
+    tile.width = Math.max(1, Math.round(tw * k)); tile.height = Math.max(1, Math.round(th * k));
+    for (let iy = 0; iy < count; iy++) for (let ix = 0; ix < count; ix++) {
+      const x0 = n === 1 ? 0 : ix * tw / 2, y0 = n === 1 ? 0 : iy * th / 2;
+      tctx.drawImage(src, x0, y0, tw, th, 0, 0, tile.width, tile.height);
+      const res = det.detect(tile);
+      (res && res.detections || []).forEach((d) => {
+        const b = d.boundingBox || {};
+        const bx = b.originX != null ? b.originX : b.origin_x, by = b.originY != null ? b.originY : b.origin_y;
+        if (bx == null || !b.width || !b.height) return;
+        found.push({
+          x: (x0 + bx / k) / w, y: (y0 + by / k) / h, w: b.width / k / w, h: b.height / k / h,
+          s: d.categories && d.categories[0] ? d.categories[0].score : 0.5
+        });
+      });
+    }
+  }
+  // 같은 얼굴을 여러 번 찾은 것은 하나로 합칩니다.
+  found.sort((a, b) => b.s - a.s);
+  const kept = [];
+  found.forEach((f) => { if (!kept.some((q) => overlap(f, q) > 0.3)) kept.push(f); });
+  // 머리카락과 턱까지 덮이도록 조금 넓힙니다.
+  return kept.map((f) => {
+    const x = Math.max(0, f.x - f.w * 0.2), y = Math.max(0, f.y - f.h * 0.35);
+    return { x, y, w: Math.min(1 - x, f.w * 1.4), h: Math.min(1 - y, f.h * 1.6) };
+  });
+}
+$("edAuto").addEventListener("click", async () => {
+  if (!ed) return;
+  const btn = $("edAuto"), note = $("edNote"), mine = ed;
+  btn.disabled = true;
+  note.textContent = "얼굴 찾기를 준비하는 중… (처음에는 몇 초 걸립니다)";
+  try {
+    const det = await getFaceDetector();
+    if (ed !== mine) return;
+    const faces = await findFaces(det, mine.src, mine.w, mine.h, (n) => { note.textContent = `얼굴을 찾는 중… ${n} / 4`; });
+    if (ed !== mine) return;
+    const fresh = faces.filter((f) => !mine.rects.some((r) => overlap(f, r) > 0.3));
+    fresh.forEach((f) => mine.rects.push(f));
+    note.textContent = fresh.length
+      ? `얼굴 ${fresh.length}곳을 표시했습니다. 빠진 곳은 끌어서 추가하고, 잘못된 네모는 눌러서 지우세요.`
+      : (faces.length ? "새로 찾은 얼굴이 없습니다." : "얼굴을 찾지 못했습니다. 필요한 곳은 손으로 끌어 덮으세요.");
+    drawEditor();
+  } catch (e) {
+    console.error(e);
+    note.textContent = "지금은 자동 찾기를 쓸 수 없습니다. 손으로 끌어 덮으세요. (" + (e && e.message ? String(e.message).slice(0, 60) : e) + ")";
+  } finally { btn.disabled = false; }
+});
+const ED_NOTE = "자동 찾기는 제안입니다. 빠진 곳이 없는지 꼭 확인하세요. 네모를 누르면 지워집니다.";
+
 function closeEditor() { if (ed && ed.src.close) ed.src.close(); ed = null; edStart = null; $("editor").hidden = true; }
 $("edUndo").addEventListener("click", () => { if (ed) { ed.rects.pop(); drawEditor(); } });
 $("edCancel").addEventListener("click", closeEditor);
@@ -218,13 +308,13 @@ $("edDone").addEventListener("click", async () => {
     refresh();
   } catch (e) {
     console.error(e);
-    alert("가린 사진을 만들지 못했습니다. 다시 시도해 주세요.");
+    alert("마스킹한 사진을 만들지 못했습니다. 다시 시도해 주세요.");
   }
   $("edDone").disabled = false;
 });
 
 // ── 화면 갱신 ─────────────────────────────
-const LABEL = { ready: "누르면 가리기", wait: "대기 중", done: "완료", fail: "실패 · 눌러서 재시도" };
+const LABEL = { ready: "눌러서 마스킹", wait: "대기 중", done: "완료", fail: "실패 · 눌러서 재시도" };
 function paint(it) {
   const el = it.el;
   el.className = "tile " + it.state;
@@ -233,7 +323,7 @@ function paint(it) {
   el.querySelector(".state").textContent = it.state === "up" ? Math.round(it.pct) + "%" : LABEL[it.state];
   el.querySelector(".fill").style.width = it.state === "up" ? it.pct + "%" : "0";
   let badge = el.querySelector(".mask");
-  if (it.masked && !badge) { badge = document.createElement("span"); badge.className = "mask"; badge.textContent = "가림"; el.appendChild(badge); }
+  if (it.masked && !badge) { badge = document.createElement("span"); badge.className = "mask"; badge.textContent = "마스킹"; el.appendChild(badge); }
   el.title = it.err || "";
 }
 function refresh() {
