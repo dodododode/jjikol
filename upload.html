@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <title>사진 올리기</title>
-  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="style.css?v=19">
 </head>
 <body>
 <div class="wrap">
@@ -53,12 +53,12 @@
   <p class="muted" style="margin-top:18px">
     올리는 동안에는 이 화면을 켜 두세요. 개인정보나 민감한 자료가 담긴 사진은 올리지 마세요.
   </p>
-  <p class="muted" style="text-align:center; font-size:13px"><a href="index.html?home=1" style="color:inherit">홈페이지 보기</a> · 버전 5</p>
+  <p class="muted" style="text-align:center; font-size:13px"><a href="index.html?home=1" style="color:inherit">홈페이지 보기</a> · 버전 6</p>
 </div>
 
 <!-- 가리기 화면 -->
 <div class="editor" id="editor" hidden>
-  <div class="ed-top">가릴 부분을 손가락으로 끌어 덮으세요</div>
+  <div class="ed-top" id="edTop">가릴 부분을 손가락으로 끌어 덮으세요</div>
   <div class="ed-stage"><canvas id="edCanvas"></canvas></div>
   <div class="ed-bar">
     <button type="button" id="edUndo">되돌리기</button>
@@ -78,7 +78,7 @@
   </div>
 </div>
 
-<script src="config.js?v=18"></script>
+<script src="config.js?v=19"></script>
 <script>
   // 앱 본체(app.js)가 8초 안에 뜨지 않으면 안내
   window.__booted = false;
@@ -91,6 +91,6 @@
   }, 8000);
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
 </script>
-<script type="module" src="app.js?v=18"></script>
+<script type="module" src="app.js?v=19"></script>
 </body>
 </html>

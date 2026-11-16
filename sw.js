@@ -1,5 +1,5 @@
 // 항상 최신 파일을 먼저 받아옵니다. (수정한 내용이 바로 반영되도록)
-const CACHE = "app-v18";
+const CACHE = "app-v19";
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => {
   e.waitUntil(caches.keys()

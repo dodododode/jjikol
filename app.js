@@ -122,26 +122,44 @@ async function runThumbs() {
 // 가린 사진은 폰 안에서 새로 만들어지고, 그 사진만 서버로 올라갑니다.
 const edCanvas = $("edCanvas");
 let ed = null; // { it, src, w, h, rects:[{x,y,w,h}] (0~1 비율), cur }
-async function loadPicture(file) {
-  try { return await createImageBitmap(file, { imageOrientation: "from-image" }); }
-  catch (e) {
-    return await new Promise((resolve, reject) => {
-      const img = new Image(), url = URL.createObjectURL(file);
-      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("load")); };
-      img.src = url;
-    });
-  }
+// 사진 열기: 폰 브라우저에서 가장 잘 되는 방식(img)을 먼저 쓰고, 안 되면 다른 방식으로 한 번 더 시도합니다.
+function loadPicture(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    const timer = setTimeout(() => { img.onload = img.onerror = null; fallback(); }, 8000);
+    function fallback() {
+      URL.revokeObjectURL(url);
+      if (!window.createImageBitmap) { reject(new Error("load")); return; }
+      createImageBitmap(file).then(resolve, reject);
+    }
+    img.onload = () => { clearTimeout(timer); resolve(img); setTimeout(() => URL.revokeObjectURL(url), 60000); };
+    img.onerror = () => { clearTimeout(timer); fallback(); };
+    img.src = url;
+  });
 }
+let edOpening = false;
 async function openEditor(it) {
-  let src;
-  try { src = await loadPicture(it.file); } catch (e) { alert("이 사진은 열 수 없어 가리기를 쓸 수 없습니다."); return; }
-  const w = src.width || src.naturalWidth, h = src.height || src.naturalHeight;
-  const k = Math.min(1, 1600 / Math.max(w, h)); // 화면용은 작게
-  edCanvas.width = Math.round(w * k); edCanvas.height = Math.round(h * k);
-  ed = { it, src, w, h, rects: [], cur: null };
+  if (edOpening || ed) return;
+  edOpening = true;
+  // 누르자마자 화면을 먼저 띄워서, 눌렸다는 것을 바로 알 수 있게 합니다.
   $("editor").hidden = false;
-  drawEditor();
+  $("edTop").textContent = "사진을 여는 중…";
+  edCanvas.width = 4; edCanvas.height = 3;
+  try {
+    const src = await loadPicture(it.file);
+    const w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
+    if (!w || !h) throw new Error("size");
+    const k = Math.min(1, 1600 / Math.max(w, h)); // 화면용은 작게
+    edCanvas.width = Math.round(w * k); edCanvas.height = Math.round(h * k);
+    ed = { it, src, w, h, rects: [], cur: null };
+    $("edTop").textContent = "가릴 부분을 손가락으로 끌어 덮으세요";
+    drawEditor();
+  } catch (e) {
+    console.error(e);
+    $("editor").hidden = true;
+    alert("이 사진은 열 수 없어 가리기를 쓸 수 없습니다. (" + (e && e.message ? e.message : e) + ")");
+  }
+  edOpening = false;
 }
 function paintRects(ctx, cw, ch, rects) {
   ctx.fillStyle = "#000";
@@ -174,10 +192,11 @@ function edEnd() {
 }
 edCanvas.addEventListener("pointerup", edEnd);
 edCanvas.addEventListener("pointercancel", edEnd);
-function closeEditor() { if (ed && ed.src.close) ed.src.close(); ed = null; $("editor").hidden = true; }
-$("edUndo").addEventListener("click", () => { ed.rects.pop(); drawEditor(); });
+function closeEditor() { if (ed && ed.src.close) ed.src.close(); ed = null; edStart = null; $("editor").hidden = true; }
+$("edUndo").addEventListener("click", () => { if (ed) { ed.rects.pop(); drawEditor(); } });
 $("edCancel").addEventListener("click", closeEditor);
 $("edDone").addEventListener("click", async () => {
+  if (!ed) return;
   if (!ed.rects.length) { closeEditor(); return; }
   $("edDone").disabled = true;
   try {
@@ -205,7 +224,7 @@ $("edDone").addEventListener("click", async () => {
 });
 
 // ── 화면 갱신 ─────────────────────────────
-const LABEL = { ready: "올리기 전", wait: "대기 중", done: "완료", fail: "실패 · 눌러서 재시도" };
+const LABEL = { ready: "누르면 가리기", wait: "대기 중", done: "완료", fail: "실패 · 눌러서 재시도" };
 function paint(it) {
   const el = it.el;
   el.className = "tile " + it.state;
