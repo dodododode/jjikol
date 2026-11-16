@@ -151,8 +151,7 @@ async function openEditor(it) {
     if (!w || !h) throw new Error("size");
     const k = Math.min(1, 1600 / Math.max(w, h)); // 화면용은 작게
     edCanvas.width = Math.round(w * k); edCanvas.height = Math.round(h * k);
-    ed = { it, src, w, h, rects: [], cur: null };
-    $("edTop").textContent = "마스킹할 부분을 손가락으로 끌어 덮으세요";
+    ed = { it, src, w, h, rects: [], cur: null, sel: -1, hist: [] };
     drawEditor();
   } catch (e) {
     console.error(e);
@@ -165,43 +164,112 @@ function paintRects(ctx, cw, ch, rects) {
   ctx.fillStyle = "#000";
   rects.forEach((r) => ctx.fillRect(r.x * cw, r.y * ch, r.w * cw, r.h * ch));
 }
+// 화면에 보이는 크기 기준으로 손잡이 크기를 정합니다. (사진 크기와 상관없이 손가락에 맞게)
+function edScale() { const b = edCanvas.getBoundingClientRect(); return { px: edCanvas.width / (b.width || 1), bw: b.width || 1, bh: b.height || 1 }; }
+function corners(r) { return [[r.x, r.y], [r.x + r.w, r.y], [r.x, r.y + r.h], [r.x + r.w, r.y + r.h]]; }
 function drawEditor() {
-  const ctx = edCanvas.getContext("2d");
-  ctx.drawImage(ed.src, 0, 0, edCanvas.width, edCanvas.height);
-  paintRects(ctx, edCanvas.width, edCanvas.height, ed.cur ? ed.rects.concat([ed.cur]) : ed.rects);
-  $("edUndo").disabled = ed.rects.length === 0;
-  $("edDone").textContent = ed.rects.length ? `완료 (${ed.rects.length}곳 마스킹)` : "완료";
+  const ctx = edCanvas.getContext("2d"), cw = edCanvas.width, ch = edCanvas.height;
+  ctx.drawImage(ed.src, 0, 0, cw, ch);
+  paintRects(ctx, cw, ch, ed.cur ? ed.rects.concat([ed.cur]) : ed.rects);
+  // 고른 네모: 노란 테두리와 네 모서리 손잡이 (화면에만 보이고, 올라가는 사진에는 들어가지 않습니다)
+  const r = ed.rects[ed.sel];
+  if (r) {
+    const px = edScale().px;
+    ctx.lineWidth = 3 * px; ctx.strokeStyle = "#ffd43b";
+    ctx.strokeRect(r.x * cw, r.y * ch, r.w * cw, r.h * ch);
+    corners(r).forEach(([x, y]) => {
+      ctx.beginPath(); ctx.arc(x * cw, y * ch, 9 * px, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffd43b"; ctx.fill();
+      ctx.lineWidth = 2 * px; ctx.strokeStyle = "#111"; ctx.stroke();
+    });
+  }
+  $("edUndo").disabled = ed.hist.length === 0;
+  $("edDel").disabled = !r;
+  $("edDone").textContent = ed.rects.length ? `완료 (${ed.rects.length}곳)` : "완료";
+  $("edTop").textContent = r ? "끌어서 옮기고, 노란 점을 끌어 크기를 바꾸세요"
+    : (ed.rects.length ? "네모를 누르면 옮기거나 크기를 바꿀 수 있습니다" : "마스킹할 부분을 손가락으로 끌어 덮으세요");
 }
 function edPoint(e) {
   const b = edCanvas.getBoundingClientRect();
   return { x: Math.min(1, Math.max(0, (e.clientX - b.left) / b.width)), y: Math.min(1, Math.max(0, (e.clientY - b.top) / b.height)) };
 }
-let edStart = null;
-edCanvas.addEventListener("pointerdown", (e) => { if (!ed) return; edCanvas.setPointerCapture(e.pointerId); edStart = edPoint(e); });
+const cloneRects = (list) => list.map((r) => ({ x: r.x, y: r.y, w: r.w, h: r.h }));
+const boxFrom = (a, b) => ({ x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(a.x - b.x), h: Math.abs(a.y - b.y) });
+// drag: { mode: "new" | "move" | "resize", start, before, ... }
+let drag = null;
+edCanvas.addEventListener("pointerdown", (e) => {
+  if (!ed || drag) return;
+  try { edCanvas.setPointerCapture(e.pointerId); } catch (err) {}
+  const p = edPoint(e), s = edScale(), hx = 26 / s.bw, hy = 26 / s.bh;
+  const before = cloneRects(ed.rects);
+  // 1) 고른 네모의 모서리를 잡았으면: 크기 바꾸기 (맞은편 모서리는 고정)
+  const sel = ed.rects[ed.sel];
+  if (sel) {
+    const cs = corners(sel);
+    for (let i = 0; i < 4; i++) {
+      if (Math.abs(p.x - cs[i][0]) <= hx && Math.abs(p.y - cs[i][1]) <= hy) {
+        drag = { mode: "resize", before, anchor: { x: cs[3 - i][0], y: cs[3 - i][1] }, changed: false };
+        return;
+      }
+    }
+  }
+  // 2) 네모 안을 잡았으면: 그 네모를 고르고 옮기기
+  for (let i = ed.rects.length - 1; i >= 0; i--) {
+    const r = ed.rects[i];
+    if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h) {
+      ed.sel = i;
+      drag = { mode: "move", before, off: { x: p.x - r.x, y: p.y - r.y }, start: p, changed: false };
+      drawEditor();
+      return;
+    }
+  }
+  // 3) 빈 곳이면: 새 네모 그리기
+  ed.sel = -1;
+  drag = { mode: "new", before, start: p };
+  drawEditor();
+});
 edCanvas.addEventListener("pointermove", (e) => {
-  if (!ed || !edStart) return;
+  if (!ed || !drag) return;
   const p = edPoint(e);
-  ed.cur = { x: Math.min(p.x, edStart.x), y: Math.min(p.y, edStart.y), w: Math.abs(p.x - edStart.x), h: Math.abs(p.y - edStart.y) };
+  if (drag.mode === "new") ed.cur = boxFrom(drag.start, p);
+  else if (drag.mode === "move") {
+    const r = ed.rects[ed.sel];
+    if (Math.abs(p.x - drag.start.x) > 0.004 || Math.abs(p.y - drag.start.y) > 0.004) drag.changed = true;
+    if (drag.changed) {
+      r.x = Math.min(1 - r.w, Math.max(0, p.x - drag.off.x));
+      r.y = Math.min(1 - r.h, Math.max(0, p.y - drag.off.y));
+    }
+  } else {
+    const nb = boxFrom(drag.anchor, p);
+    if (nb.w >= 0.02 && nb.h >= 0.02) { Object.assign(ed.rects[ed.sel], nb); drag.changed = true; }
+  }
   drawEditor();
 });
 function edEnd() {
-  if (!ed || !edStart) return;
-  if (ed.cur && ed.cur.w > 0.01 && ed.cur.h > 0.01) ed.rects.push(ed.cur);
-  else {
-    // 끌지 않고 누르기만 했으면: 그 자리에 있는 네모를 지웁니다.
-    const p = edStart;
-    for (let i = ed.rects.length - 1; i >= 0; i--) {
-      const r = ed.rects[i];
-      if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h) { ed.rects.splice(i, 1); break; }
+  if (!ed || !drag) return;
+  if (drag.mode === "new") {
+    if (ed.cur && ed.cur.w > 0.01 && ed.cur.h > 0.01) {
+      ed.hist.push(drag.before);
+      ed.rects.push(ed.cur);
+      ed.sel = ed.rects.length - 1; // 방금 그린 네모를 바로 고쳐 쓸 수 있게 골라 둡니다
     }
-  }
-  ed.cur = null; edStart = null;
+    ed.cur = null;
+  } else if (drag.changed) ed.hist.push(drag.before);
+  drag = null;
   drawEditor();
 }
 edCanvas.addEventListener("pointerup", edEnd);
 edCanvas.addEventListener("pointercancel", edEnd);
-function closeEditor() { if (ed && ed.src.close) ed.src.close(); ed = null; edStart = null; $("editor").hidden = true; }
-$("edUndo").addEventListener("click", () => { if (ed) { ed.rects.pop(); drawEditor(); } });
+function closeEditor() { if (ed && ed.src.close) ed.src.close(); ed = null; drag = null; $("editor").hidden = true; }
+$("edUndo").addEventListener("click", () => {
+  if (!ed || !ed.hist.length) return;
+  ed.rects = ed.hist.pop(); ed.sel = -1; drawEditor();
+});
+$("edDel").addEventListener("click", () => {
+  if (!ed || !ed.rects[ed.sel]) return;
+  ed.hist.push(cloneRects(ed.rects));
+  ed.rects.splice(ed.sel, 1); ed.sel = -1; drawEditor();
+});
 $("edCancel").addEventListener("click", closeEditor);
 $("edDone").addEventListener("click", async () => {
   if (!ed) return;
