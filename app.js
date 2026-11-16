@@ -88,6 +88,7 @@ function makeTile(it) {
   });
   el.addEventListener("click", () => {
     if (it.state === "fail") { it.state = "wait"; refresh(); pump(); }
+    else if (it.state === "ready") openEditor(it);
   });
   return el;
 }
@@ -117,6 +118,92 @@ async function runThumbs() {
   thumbBusy = false;
 }
 
+// ── 가리기: 올리기 전에 사진의 일부를 검게 덮습니다 ─────────────
+// 가린 사진은 폰 안에서 새로 만들어지고, 그 사진만 서버로 올라갑니다.
+const edCanvas = $("edCanvas");
+let ed = null; // { it, src, w, h, rects:[{x,y,w,h}] (0~1 비율), cur }
+async function loadPicture(file) {
+  try { return await createImageBitmap(file, { imageOrientation: "from-image" }); }
+  catch (e) {
+    return await new Promise((resolve, reject) => {
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("load")); };
+      img.src = url;
+    });
+  }
+}
+async function openEditor(it) {
+  let src;
+  try { src = await loadPicture(it.file); } catch (e) { alert("이 사진은 열 수 없어 가리기를 쓸 수 없습니다."); return; }
+  const w = src.width || src.naturalWidth, h = src.height || src.naturalHeight;
+  const k = Math.min(1, 1600 / Math.max(w, h)); // 화면용은 작게
+  edCanvas.width = Math.round(w * k); edCanvas.height = Math.round(h * k);
+  ed = { it, src, w, h, rects: [], cur: null };
+  $("editor").hidden = false;
+  drawEditor();
+}
+function paintRects(ctx, cw, ch, rects) {
+  ctx.fillStyle = "#000";
+  rects.forEach((r) => ctx.fillRect(r.x * cw, r.y * ch, r.w * cw, r.h * ch));
+}
+function drawEditor() {
+  const ctx = edCanvas.getContext("2d");
+  ctx.drawImage(ed.src, 0, 0, edCanvas.width, edCanvas.height);
+  paintRects(ctx, edCanvas.width, edCanvas.height, ed.cur ? ed.rects.concat([ed.cur]) : ed.rects);
+  $("edUndo").disabled = ed.rects.length === 0;
+  $("edDone").textContent = ed.rects.length ? `완료 (${ed.rects.length}곳 가림)` : "완료";
+}
+function edPoint(e) {
+  const b = edCanvas.getBoundingClientRect();
+  return { x: Math.min(1, Math.max(0, (e.clientX - b.left) / b.width)), y: Math.min(1, Math.max(0, (e.clientY - b.top) / b.height)) };
+}
+let edStart = null;
+edCanvas.addEventListener("pointerdown", (e) => { if (!ed) return; edCanvas.setPointerCapture(e.pointerId); edStart = edPoint(e); });
+edCanvas.addEventListener("pointermove", (e) => {
+  if (!ed || !edStart) return;
+  const p = edPoint(e);
+  ed.cur = { x: Math.min(p.x, edStart.x), y: Math.min(p.y, edStart.y), w: Math.abs(p.x - edStart.x), h: Math.abs(p.y - edStart.y) };
+  drawEditor();
+});
+function edEnd() {
+  if (!ed || !edStart) return;
+  if (ed.cur && ed.cur.w > 0.01 && ed.cur.h > 0.01) ed.rects.push(ed.cur);
+  ed.cur = null; edStart = null;
+  drawEditor();
+}
+edCanvas.addEventListener("pointerup", edEnd);
+edCanvas.addEventListener("pointercancel", edEnd);
+function closeEditor() { if (ed && ed.src.close) ed.src.close(); ed = null; $("editor").hidden = true; }
+$("edUndo").addEventListener("click", () => { ed.rects.pop(); drawEditor(); });
+$("edCancel").addEventListener("click", closeEditor);
+$("edDone").addEventListener("click", async () => {
+  if (!ed.rects.length) { closeEditor(); return; }
+  $("edDone").disabled = true;
+  try {
+    // 원래 크기로 다시 그립니다. 폰이 다룰 수 있는 한도를 넘는 아주 큰 사진만 줄입니다.
+    const k = Math.min(1, Math.sqrt(16000000 / (ed.w * ed.h)));
+    const c = document.createElement("canvas");
+    c.width = Math.round(ed.w * k); c.height = Math.round(ed.h * k);
+    const ctx = c.getContext("2d");
+    ctx.drawImage(ed.src, 0, 0, c.width, c.height);
+    paintRects(ctx, c.width, c.height, ed.rects);
+    const blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.92));
+    if (!blob || !blob.size) throw new Error("empty");
+    const name = (ed.it.file.name || "photo").replace(/\.[^.]+$/, "") + ".jpg";
+    const it = ed.it;
+    it.file = new File([blob], name, { type: "image/jpeg", lastModified: Date.now() });
+    it.masked = true;
+    thumbQueue.push(it); runThumbs();
+    closeEditor();
+    refresh();
+  } catch (e) {
+    console.error(e);
+    alert("가린 사진을 만들지 못했습니다. 다시 시도해 주세요.");
+  }
+  $("edDone").disabled = false;
+});
+
 // ── 화면 갱신 ─────────────────────────────
 const LABEL = { ready: "올리기 전", wait: "대기 중", done: "완료", fail: "실패 · 눌러서 재시도" };
 function paint(it) {
@@ -126,6 +213,8 @@ function paint(it) {
   el.querySelector(".x").hidden = it.state !== "ready";
   el.querySelector(".state").textContent = it.state === "up" ? Math.round(it.pct) + "%" : LABEL[it.state];
   el.querySelector(".fill").style.width = it.state === "up" ? it.pct + "%" : "0";
+  let badge = el.querySelector(".mask");
+  if (it.masked && !badge) { badge = document.createElement("span"); badge.className = "mask"; badge.textContent = "가림"; el.appendChild(badge); }
   el.title = it.err || "";
 }
 function refresh() {
