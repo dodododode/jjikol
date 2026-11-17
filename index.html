@@ -15,7 +15,7 @@
   <meta name="theme-color" content="#131a2b">
   <meta name="description" content="사진을 폰에서 올리고 PC에서 바로 받는 가장 쉬운 방법">
   <title>찍올 - 찍고! 올리면! 끝!</title>
-  <link rel="stylesheet" href="home.css?v=40">
+  <link rel="stylesheet" href="home.css?v=43">
 </head>
 <body>
 <div class="inner">
@@ -23,9 +23,8 @@
     <a class="logo" href="index.html?home=1"><i></i><span class="app-name">찍올</span></a>
     <nav>
       <a href="how.html">사용방법</a>
-      <a class="opt" href="about.html">서비스 소개</a>
-      <a class="opt" href="notice.html">공지사항</a>
-      <a href="upload.html">폰에서 올리기</a>
+      <a href="about.html">서비스 소개</a>
+      <a href="notice.html">공지사항</a>
     </nav>
   </header>
 
@@ -74,13 +73,12 @@
       <li><b>올리기</b><p>어디까지 올라갔는지 보입니다.</p></li>
       <li><b>PC에서 받기</b><p>코드만 넣으면 됩니다. 받은 사진은 바로 지워집니다.</p></li>
     </ol>
-    <div class="phone-link wide-only"><span>폰에서는 이 주소로 접속하세요.</span><a id="phoneUrl" href="upload.html"></a></div>
   </div>
 </section>
 
 <footer class="site-foot">
   <div class="inner">
-    <div class="row"><span><b>만든이</b> <span class="app-name">찍올</span> 운영자</span><span><b>문의</b> <a href="notice.html#askForm">공지사항의 문의 남기기</a> · <a href="mailto:jjikol.help@gmail.com">jjikol.help@gmail.com</a></span><span><a href="privacy.html"><b>개인정보처리방침</b></a></span></div>
+    <div class="row"><span><b>만든이</b> <span class="app-name">찍올</span> 운영자</span><span><b>문의</b> <a href="notice.html#askForm">문의 남기기</a> · <a href="mailto:jjikol.help@gmail.com">jjikol.help@gmail.com</a></span><span><a href="privacy.html"><b>개인정보처리방침</b></a></span></div>
     <details class="legal" open>
       <summary><b>개인정보나 민감한 정보가 있는지 확인하고, 있으면 마스킹한 뒤 올려 주세요.</b></summary>
       <ul>
@@ -100,7 +98,6 @@
     document.title = APP.name + " - 찍고! 올리면! 끝!";
   }
   var u = new URL("index.html", location.href).href;
-  document.getElementById("phoneUrl").textContent = u.replace(/^https?:\/\//, "").replace(/index\.html$/, "");
   var input = document.getElementById("codeInput");
   function clean(v) { return v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8); }
   input.addEventListener("input", function () {

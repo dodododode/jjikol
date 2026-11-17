@@ -111,7 +111,7 @@ a{color:inherit}
 }
 @media (max-width:560px){
   .inner{padding:0 18px}
-  .site-head nav a.opt{display:none}
+  .site-head nav{gap:14px; font-size:14px}
   .code-form{flex-direction:column}
   .code-form input{flex:none; width:100%}
   .stage-wrap{height:300px; overflow:hidden}
@@ -179,6 +179,7 @@ a{color:inherit}
 .story h2,.diff h2,.care h2{font-size:34px; font-weight:900; letter-spacing:-.03em; margin:0 0 18px}
 .story p{font-size:22px; line-height:1.7; margin:0 0 14px; word-break:keep-all}
 .story p.em{font-weight:800}
+.story p.em small{font-size:.68em; font-weight:600; color:var(--sub); margin-left:8px; white-space:nowrap}
 .diff{background:#fff; border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:60px 0}
 .diff ul{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 20px}
 .diff li{border:2.5px solid var(--ink); border-radius:18px; padding:22px; display:grid; grid-template-columns:auto 1fr; gap:4px 16px; align-items:start}
