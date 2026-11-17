@@ -447,3 +447,7 @@ details.legal:not([open]) summary::after{content:"자세히"; margin-left:10px; 
   .m-done{display:none}
   .s3 .m-bar i{width:100%}
 }
+
+details.look{margin-top:36px}
+details.look summary{cursor:pointer; font-weight:700; font-size:16px; color:var(--sub); width:max-content; max-width:100%}
+details.look[open] summary{margin-bottom:12px}
