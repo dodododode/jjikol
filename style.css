@@ -47,6 +47,26 @@ header.top nav{display:flex; gap:18px}
 .file-hidden{position:absolute; width:1px; height:1px; opacity:0; overflow:hidden}
 :focus-visible{outline:3px solid var(--accent); outline-offset:2px}
 
+/* 처음 화면의 두 선택: 사진 보관함(위), 사진 촬영(아래) */
+.choose{display:grid; gap:12px; margin-bottom:14px}
+.pick{
+  display:grid; grid-template-columns:auto 1fr; column-gap:18px; align-items:center;
+  min-height:150px; padding:20px 22px; border-radius:22px; border:2.5px solid var(--ink);
+  background:#fff; color:var(--ink); cursor:pointer;
+}
+.pick.main{background:var(--ink); color:#fff}
+.pick .ico{grid-row:span 2; width:64px; height:64px; fill:none; stroke:currentColor; stroke-width:3; stroke-linecap:round; stroke-linejoin:round}
+.pick.main .ico{stroke:var(--yellow)}
+.pick b{font-size:26px; font-weight:900; letter-spacing:-.02em; align-self:end}
+.pick small{font-size:15px; opacity:.75; align-self:start}
+.pick:active{transform:scale(.985)}
+/* 사진을 고른 뒤에는 작게 */
+.has-items .choose{grid-template-columns:1fr 1fr; gap:10px}
+.has-items .pick{min-height:54px; padding:0 12px; border-radius:14px; grid-template-columns:auto auto; justify-content:center; column-gap:8px}
+.has-items .pick .ico{width:22px; height:22px; grid-row:auto}
+.has-items .pick b{font-size:16px; font-weight:800; align-self:center}
+.has-items .pick small{display:none}
+
 /* 진행 요약 */
 .summary{display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:8px}
 .summary b{font-size:17px}

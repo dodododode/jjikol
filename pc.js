@@ -31,7 +31,20 @@ $("codeForm").addEventListener("submit", (e) => {
   const c = clean($("codeInput").value);
   if (c.length !== 8) { alert("코드는 8자리입니다."); return; }
   code = c;
+  remember(c);
   load();
+});
+// 이 PC(브라우저)에 코드를 기억해 둡니다.
+function remember(c) {
+  try { localStorage.setItem("pcCode", c); } catch (e) {}
+  $("forget").hidden = false;
+}
+$("forget").addEventListener("click", () => {
+  if (!confirm("이 PC에 기억해 둔 코드를 지울까요?\n여러 사람이 함께 쓰는 PC라면 지워 두는 것이 안전합니다.")) return;
+  try { localStorage.removeItem("pcCode"); } catch (e) {}
+  code = ""; photos = [];
+  $("codeInput").value = ""; $("forget").hidden = true; $("listPanel").hidden = true;
+  $("codeInput").focus();
 });
 $("reload").addEventListener("click", load);
 
@@ -247,11 +260,14 @@ $("delSel").addEventListener("click", async () => {
   load();
 });
 
-// 홈페이지에서 코드를 입력하고 넘어온 경우 바로 사진을 보여줍니다.
+// 홈페이지에서 코드를 입력하고 넘어왔거나, 전에 기억해 둔 코드가 있으면 바로 사진을 보여줍니다.
 {
-  const q = clean(new URLSearchParams(location.search).get("code") || "");
+  let q = clean(new URLSearchParams(location.search).get("code") || "");
+  if (q.length === 8) remember(q);
+  else { try { q = clean(localStorage.getItem("pcCode") || ""); } catch (e) { q = ""; } }
   if (q.length === 8) {
     $("codeInput").value = q.slice(0, 4) + "-" + q.slice(4);
+    $("forget").hidden = false;
     code = q;
     load();
   }

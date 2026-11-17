@@ -261,3 +261,19 @@ details.legal:not([open]) summary::after{content:"자세히"; margin-left:10px; 
   .steps p{font-size:15px}
   .site-foot{padding:24px 0 36px}
 }
+
+/* ── 개인정보처리방침 페이지 ───────────────── */
+.policy{max-width:820px; padding:12px 0 72px}
+.policy .date{color:var(--sub); font-size:15px; margin:0 0 28px}
+.policy h2{font-size:24px; font-weight:900; letter-spacing:-.02em; margin:38px 0 10px}
+.policy p,.policy li{font-size:17px; line-height:1.7; word-break:keep-all}
+.policy p{margin:0 0 10px}
+.policy ul{margin:0 0 10px; padding-left:22px}
+.policy li{margin:4px 0}
+.policy table{width:100%; border-collapse:collapse; margin:8px 0 12px; font-size:16px}
+.policy th,.policy td{border:1.5px solid var(--line); padding:10px 12px; text-align:left; vertical-align:top; word-break:keep-all}
+.policy th{background:#fff; font-weight:800; white-space:nowrap}
+.policy .box{border:2.5px solid var(--ink); border-radius:16px; background:#fff; padding:18px 20px; margin:8px 0 12px}
+.policy a{color:var(--blue); font-weight:700}
+.site-foot .row a{color:inherit}
+@media (max-width:560px){ .policy table,.policy th,.policy td{font-size:14px} .policy th{white-space:normal} }

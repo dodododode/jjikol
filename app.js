@@ -42,8 +42,26 @@ function showCode() { $("code").textContent = pretty(code); $("doneCode").textCo
 showCode();
 $("pcUrl").textContent = new URL("./", location.href).href.replace(/^https?:\/\//, "");
 
-$("newCode").addEventListener("click", () => {
-  if (!confirm("새 코드를 만들까요?\n이전 코드로 올린 사진은 이전 코드로만 볼 수 있습니다.")) return;
+// 코드 복사
+$("copyCode").addEventListener("click", async () => {
+  const text = pretty(code), btn = $("copyCode");
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {
+    // 예비 방식: 보이지 않는 입력칸에 넣어 복사
+    try {
+      const t = document.createElement("textarea");
+      t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
+      document.body.appendChild(t); t.select();
+      ok = document.execCommand("copy"); t.remove();
+    } catch (e2) {}
+  }
+  btn.textContent = ok ? "복사됨" : "복사 실패";
+  setTimeout(() => { btn.textContent = "코드 복사"; }, 1500);
+});
+// 코드 바꾸기 (코드가 다른 사람에게 알려졌을 때)
+$("newCode").addEventListener("click", (e) => {
+  e.preventDefault();
+  if (!confirm("코드를 새로 바꿀까요?\n바꾸면 PC에서도 새 코드를 다시 입력해야 하고, 이전 코드로 올린 사진은 이전 코드로만 볼 수 있습니다.")) return;
   code = makeCode();
   try { localStorage.setItem("code", code); } catch (e) {}
   showCode();
@@ -326,6 +344,7 @@ function refresh() {
   $("retryBtn").hidden = !fail || busy > 0;
   $("retryBtn").textContent = `실패한 ${fail}장 다시 올리기`;
   $("queuePanel").hidden = total === 0;
+  document.body.classList.toggle("has-items", total > 0); // 사진이 있으면 선택 버튼을 작게
 
   // 모두 끝났을 때: 결과를 알려주고, 실패가 없으면 목록을 비웁니다.
   const finished = total > 0 && busy === 0 && ready === 0;

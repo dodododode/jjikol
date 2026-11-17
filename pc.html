@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>사진 받기</title>
-  <link rel="stylesheet" href="style.css?v=25">
+  <link rel="stylesheet" href="style.css?v=28">
 </head>
 <body>
 <div class="wrap wide">
@@ -21,7 +21,7 @@
              maxlength="9" placeholder="코드 8자리" aria-label="코드">
       <button class="btn" type="submit">사진 보기</button>
     </form>
-    <p class="muted" style="margin:10px 0 0">폰 앱 첫 화면에 보이는 "내 코드"를 입력하세요.</p>
+    <p class="muted" style="margin:10px 0 0">폰 앱 첫 화면에 보이는 "내 코드"를 입력하세요. 한 번 입력하면 이 PC가 기억해서, 다음부터는 바로 사진이 나옵니다. <button class="linkbtn" id="forget" type="button" hidden>기억한 코드 지우기</button></p>
   </section>
 
   <section id="listPanel" hidden>
@@ -38,12 +38,12 @@
     <div class="notice bad" id="zipMsg" hidden></div>
     <div class="done-box" id="resultMsg" hidden style="margin-bottom:12px"></div>
     <div class="cards" id="cards"></div>
-    <div class="empty" id="empty" hidden>이 코드로 올린 사진이 없습니다. 코드를 다시 확인하세요.</div>
+    <div class="empty" id="empty" hidden>올라온 사진이 없습니다. 폰에서 올린 뒤 새로고침을 눌러 주세요.<br>사진을 올렸는데도 안 보이면 코드가 맞는지 확인해 주세요.</div>
   </section>
-  <p class="muted" style="text-align:center; font-size:12px">버전 6</p>
+  <p class="muted" style="text-align:center; font-size:12px">버전 7</p>
 </div>
 
-<script src="config.js?v=25"></script>
+<script src="config.js?v=28"></script>
 <script>
   window.__booted = false;
   setTimeout(function () {
@@ -54,6 +54,6 @@
     }
   }, 8000);
 </script>
-<script type="module" src="pc.js?v=25"></script>
+<script type="module" src="pc.js?v=28"></script>
 </body>
 </html>

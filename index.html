@@ -2,11 +2,20 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <script>
+    // 이 PC에 기억해 둔 코드가 있으면 첫 화면 대신 바로 사진 받기 화면을 엽니다.
+    (function () {
+      try {
+        var c = localStorage.getItem("pcCode");
+        if (c && c.length === 8 && !/[?&]home=1/.test(location.search)) location.replace("pc.html");
+      } catch (e) {}
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#131a2b">
   <meta name="description" content="출장·현장 사진을 폰에서 올리고 PC에서 바로 받는 가장 쉬운 방법">
   <title>찍올 - 찍고! 올리면! 끝!</title>
-  <link rel="stylesheet" href="home.css?v=17">
+  <link rel="stylesheet" href="home.css?v=26">
 </head>
 <body>
 <div class="inner">
@@ -57,7 +66,7 @@
 
 <footer class="site-foot">
   <div class="inner">
-    <div class="row"><span><b>만든이</b> <span class="app-name">찍올</span> 운영자</span><span><b>문의</b> <a href="notice.html#askForm">공지사항의 문의 남기기</a></span></div>
+    <div class="row"><span><b>만든이</b> <span class="app-name">찍올</span> 운영자</span><span><b>문의</b> <a href="notice.html#askForm">공지사항의 문의 남기기</a> · <a href="mailto:jjikol.help@gmail.com">jjikol.help@gmail.com</a></span><span><a href="privacy.html"><b>개인정보처리방침</b></a></span></div>
     <details class="legal" open>
       <summary><b>개인정보·민감정보가 담긴 사진은 올리지 마세요.</b></summary>
       <ul>
