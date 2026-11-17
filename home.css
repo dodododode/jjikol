@@ -279,3 +279,155 @@ details.legal:not([open]) summary::after{content:"자세히"; margin-left:10px; 
 .policy a{color:var(--blue); font-weight:700}
 .site-foot .row a{color:inherit}
 @media (max-width:560px){ .policy table,.policy th,.policy td{font-size:14px} .policy th{white-space:normal} }
+
+/* 사용방법 그림: 새 앱 화면과 마스킹 */
+.page-title .note{display:inline-block; margin-top:14px; padding:8px 14px; border-radius:12px; background:#fff; border:1.5px solid var(--line); font-size:15px; color:var(--sub)}
+.m-codebar{display:flex; align-items:center; gap:6px; border:1.5px solid var(--line); border-radius:9px; padding:5px 8px; margin-bottom:22px}
+.m-codebar small{font-size:9px; color:var(--sub)}
+.m-codebar b{flex:1; font-size:12px; letter-spacing:.06em}
+.m-codebar i{font-style:normal; font-size:10px; font-weight:800; color:var(--blue)}
+.m-pick{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; height:64px; border-radius:12px; border:1.5px solid var(--ink); font-weight:800; font-size:12px; margin-bottom:14px}
+.m-pick.main{background:var(--ink); color:#fff}
+.m-pick svg{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:3; stroke-linecap:round; stroke-linejoin:round}
+.m-pick.main svg{stroke:var(--yellow)}
+.mock.ph.dark{background:#0d1218; border-color:var(--ink); color:#fff}
+.m-edtop{text-align:center; font-size:10px; font-weight:700; margin-bottom:10px}
+.m-shot{position:relative; aspect-ratio:4/3; border-radius:4px; background:linear-gradient(#9cc4ff 0 58%, #19a974 58%); margin-bottom:12px}
+.m-shot svg{position:absolute; inset:0; width:100%; height:100%}
+.m-mask{position:absolute; background:#000}
+.m-mask i{position:absolute; inset:0; outline:2px solid var(--yellow)}
+.m-mask i::before,.m-mask i::after{content:""; position:absolute; width:9px; height:9px; border-radius:50%; background:var(--yellow); border:1.5px solid #111}
+.m-mask i::before{left:-6px; top:-6px}
+.m-mask i::after{right:-6px; bottom:-6px}
+.m-mask.a{left:36%; top:61%; width:28%; height:14%; animation:mkA 12s ease-in-out infinite}
+.m-mask.a i{opacity:0; animation:mkAsel 12s linear infinite}
+.m-mask.b{left:62%; top:10%; width:26%; height:20%; opacity:0; animation:mkB 12s ease-in-out infinite}
+.m-finger{position:absolute; left:36%; top:61%; width:20px; height:20px; margin:-10px 0 0 -10px; border-radius:50%; background:rgba(255,255,255,.75); border:2px solid #131a2b; box-shadow:0 2px 6px rgba(0,0,0,.35); opacity:0; z-index:2; animation:mkF 12s ease-in-out infinite}
+.m-edbar span:nth-child(2){animation:mkDel 12s linear infinite}
+@keyframes mkA{
+  0%,4%{width:0; height:0; opacity:0}
+  5%{width:0; height:0; opacity:1}
+  14%,18%{width:14%; height:8%}
+  26%,30%{width:44%; height:26%}
+  38%,92%{width:28%; height:14%; opacity:1}
+  97%,100%{width:28%; height:14%; opacity:0}
+}
+@keyframes mkAsel{0%,4%{opacity:0} 5%,43%{opacity:1} 45%,100%{opacity:0}}
+@keyframes mkB{
+  0%,45%{width:0; height:0; opacity:0}
+  46%{width:0; height:0; opacity:1}
+  54%,65%{width:26%; height:20%; opacity:1}
+  66.5%,100%{width:26%; height:20%; opacity:0}
+}
+@keyframes mkF{
+  0%{left:36%; top:61%; opacity:0}
+  4%{left:36%; top:61%; opacity:1}
+  14%,18%{left:50%; top:69%}
+  26%,30%{left:80%; top:87%}
+  38%,41%{left:64%; top:75%; opacity:1}
+  43%{left:64%; top:75%; opacity:0}
+  44%{left:62%; top:10%; opacity:0}
+  46%{left:62%; top:10%; opacity:1}
+  54%,57%{left:88%; top:30%}
+  62%,67%{left:35%; top:119%; opacity:1}
+  70%,100%{left:35%; top:119%; opacity:0}
+}
+@keyframes mkDel{0%,62%{background:transparent; color:#fff} 63%,67%{background:var(--yellow); color:#111} 69%,100%{background:transparent; color:#fff}}
+@media (prefers-reduced-motion:reduce){.m-mask.a,.m-mask.a i,.m-mask.b,.m-finger,.m-edbar span:nth-child(2){animation:none}}
+.m-edbar{display:grid; grid-template-columns:1fr .8fr .8fr 1.4fr; gap:4px}
+.m-edbar span{text-align:center; font-size:9px; font-weight:700; padding:7px 0; border-radius:7px; border:1px solid #5b6675}
+.m-edbar span.go{background:var(--blue); border-color:var(--blue)}
+.faq dl.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:900px){ .faq dl.three{grid-template-columns:1fr} }
+
+/* 사용방법 움직이는 예시 */
+.mock .m-finger{position:absolute}
+.s1 .m-sheet{position:absolute; inset:0; border-radius:25px; background:#fff; padding:18px 14px 22px; opacity:0; animation:s1sheet 8s linear infinite}
+.m-sheet>b{display:block; font-size:12px; margin-bottom:8px}
+.m-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:5px}
+.m-grid i{position:relative; aspect-ratio:1; border-radius:6px; background:linear-gradient(#9cc4ff 0 58%, #19a974 58%)}
+.m-grid i:nth-child(2n){background:linear-gradient(#ffe08a 0 58%, #f08c4a 58%)}
+.m-grid i:nth-child(3n){background:linear-gradient(#d7c6ff 0 58%, #6c7fe0 58%)}
+.m-grid i::after,.s3 .m-tile::after{content:"✓"; position:absolute; display:grid; place-items:center; border-radius:50%; color:#fff; font-style:normal; font-weight:900; border:2px solid #fff; transform:scale(0)}
+.m-grid i::after{right:3px; top:3px; width:20px; height:20px; font-size:12px; background:var(--blue)}
+.m-grid i::after{animation:8s linear infinite}
+.m-grid .c1::after{animation-name:s1c1}
+.m-grid .c2::after{animation-name:s1c2}
+.m-grid .c3::after{animation-name:s1c3}
+.m-sel{margin-top:10px; opacity:0; animation:s1sel 8s linear infinite}
+.s1 .m-finger{left:100px; top:101px; animation:s1f 8s ease-in-out infinite}
+.s1 .m-pick.main{animation:s1tap 8s linear infinite}
+@keyframes s1tap{0%,6%{filter:none} 7%,10%{filter:brightness(1.9)} 12%,100%{filter:none}}
+@keyframes s1sheet{0%,10%{opacity:0; transform:translateY(12px)} 15%,90%{opacity:1; transform:none} 96%,100%{opacity:0; transform:none}}
+@keyframes s1f{
+  0%{left:100px; top:101px; opacity:0}
+  4%,12%{left:100px; top:101px; opacity:1}
+  22%,27%{left:41px; top:69px}
+  35%,40%{left:100px; top:69px}
+  48%,53%{left:100px; top:128px; opacity:1}
+  58%,100%{left:100px; top:128px; opacity:0}
+}
+@keyframes s1c1{0%,24%{transform:scale(0)} 27%{transform:scale(1.3)} 30%,100%{transform:scale(1)}}
+@keyframes s1c2{0%,37%{transform:scale(0)} 40%{transform:scale(1.3)} 43%,100%{transform:scale(1)}}
+@keyframes s1c3{0%,50%{transform:scale(0)} 53%{transform:scale(1.3)} 56%,100%{transform:scale(1)}}
+@keyframes s1sel{0%,56%{opacity:0; transform:scale(.8)} 60%{opacity:1; transform:scale(1.06)} 63%,100%{opacity:1; transform:none}}
+
+.m-sum{position:relative; height:16px; margin-bottom:5px; font-size:12px}
+.m-sum b{position:absolute; left:0; top:0}
+.m-sum .t2{color:var(--ok); opacity:0; animation:s3t2 7s linear infinite}
+.m-sum .t1{animation:s3t1 7s linear infinite}
+.s3 .m-bar i{width:0; animation:s3bar 7s linear infinite}
+.s3 .m-tile::after{left:50%; top:50%; width:26px; height:26px; margin:-15px 0 0 -15px; font-size:15px; background:var(--ok); animation:7s linear infinite}
+.s3 .m-finger{left:100px; top:190px; animation:s3f 7s linear infinite}
+.s3 .m-up{animation:s3tap 7s linear infinite}
+@keyframes s3f{0%{opacity:0} 4%,11%{opacity:1} 15%,100%{opacity:0}}
+@keyframes s3tap{0%,7%{filter:none} 8%,11%{filter:brightness(1.5)} 13%,100%{filter:none}}
+@keyframes s3bar{0%,14%{width:0} 74%,94%{width:100%; opacity:1} 100%{width:100%; opacity:0}}
+@keyframes s3t1{0%,73%{opacity:1} 75%,97%{opacity:0} 100%{opacity:1}}
+@keyframes s3t2{0%,73%{opacity:0} 76%,94%{opacity:1} 98%,100%{opacity:0}}
+.s3 .m-tile:nth-child(1)::after{animation-name:s3c1}
+@keyframes s3c1{0%,20%{transform:scale(0); opacity:1} 23%{transform:scale(1.25)} 26%,94%{transform:scale(1); opacity:1} 100%{transform:scale(1); opacity:0}}
+.s3 .m-tile:nth-child(2)::after{animation-name:s3c2}
+@keyframes s3c2{0%,30%{transform:scale(0); opacity:1} 33%{transform:scale(1.25)} 36%,94%{transform:scale(1); opacity:1} 100%{transform:scale(1); opacity:0}}
+.s3 .m-tile:nth-child(3)::after{animation-name:s3c3}
+@keyframes s3c3{0%,40%{transform:scale(0); opacity:1} 43%{transform:scale(1.25)} 46%,94%{transform:scale(1); opacity:1} 100%{transform:scale(1); opacity:0}}
+.s3 .m-tile:nth-child(4)::after{animation-name:s3c4}
+@keyframes s3c4{0%,50%{transform:scale(0); opacity:1} 53%{transform:scale(1.25)} 56%,94%{transform:scale(1); opacity:1} 100%{transform:scale(1); opacity:0}}
+.s3 .m-tile:nth-child(5)::after{animation-name:s3c5}
+@keyframes s3c5{0%,60%{transform:scale(0); opacity:1} 63%{transform:scale(1.25)} 66%,94%{transform:scale(1); opacity:1} 100%{transform:scale(1); opacity:0}}
+.s3 .m-tile:nth-child(6)::after{animation-name:s3c6}
+@keyframes s3c6{0%,70%{transform:scale(0); opacity:1} 73%{transform:scale(1.25)} 76%,94%{transform:scale(1); opacity:1} 100%{transform:scale(1); opacity:0}}
+
+.m-cards{position:relative}
+.m-input span{display:inline-block}
+.s4 .m-input span{animation:s4type 8s steps(9) infinite}
+.s4 .m-card{animation:8s ease-out infinite}
+.m-toast{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) scale(0); white-space:nowrap; background:var(--ok); color:#fff; font-weight:800; font-size:13px; padding:9px 16px; border-radius:99px; animation:s4toast 8s linear infinite}
+.m-cursor{position:absolute; left:269px; top:36px; width:16px; height:20px; opacity:0; animation:s4cur 8s ease-in-out infinite}
+.s4 .m-view{animation:s4v 8s linear infinite}
+.s4 .m-zip{animation:s4z 8s linear infinite}
+@keyframes s4type{0%,4%{clip-path:inset(0 100% 0 0)} 22%,100%{clip-path:inset(0 0 0 0)}}
+@keyframes s4cur{
+  0%{left:190px; top:110px; opacity:1}
+  20%{left:190px; top:110px}
+  28%,46%{left:262px; top:34px}
+  57%,66%{left:80px; top:160px; opacity:1}
+  72%,100%{left:80px; top:160px; opacity:0}
+}
+@keyframes s4v{0%,28%{filter:none} 29%,32%{filter:brightness(2.2)} 34%,100%{filter:none}}
+@keyframes s4z{0%,58%{filter:none} 59%,62%{filter:brightness(1.5)} 64%,100%{filter:none}}
+@keyframes s4toast{0%,70%{transform:translate(-50%,-50%) scale(0); opacity:1} 74%{transform:translate(-50%,-50%) scale(1.1)} 77%,94%{transform:translate(-50%,-50%) scale(1); opacity:1} 100%{transform:translate(-50%,-50%) scale(1); opacity:0}}
+.s4 .m-card:nth-child(1){animation-name:s4k1}
+@keyframes s4k1{0%,33%{opacity:0; transform:scale(.6)} 37%,64%{opacity:1; transform:none} 70%,100%{opacity:0; transform:translateY(16px)}}
+.s4 .m-card:nth-child(2){animation-name:s4k2}
+@keyframes s4k2{0%,37%{opacity:0; transform:scale(.6)} 41%,64%{opacity:1; transform:none} 70%,100%{opacity:0; transform:translateY(16px)}}
+.s4 .m-card:nth-child(3){animation-name:s4k3}
+@keyframes s4k3{0%,41%{opacity:0; transform:scale(.6)} 45%,64%{opacity:1; transform:none} 70%,100%{opacity:0; transform:translateY(16px)}}
+.s4 .m-card:nth-child(4){animation-name:s4k4}
+@keyframes s4k4{0%,45%{opacity:0; transform:scale(.6)} 49%,64%{opacity:1; transform:none} 70%,100%{opacity:0; transform:translateY(16px)}}
+
+@media (prefers-reduced-motion:reduce){
+  .mock *,.mock *::after{animation:none !important}
+  .s3 .m-tile::after{transform:scale(1)}
+  .s3 .m-bar i{width:100%}
+}
