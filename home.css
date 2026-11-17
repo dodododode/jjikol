@@ -52,9 +52,11 @@ a{color:inherit}
 .phone .shutter{position:absolute; left:50%; bottom:14px; width:34px; height:34px; margin-left:-17px; border-radius:50%; border:5px solid var(--ink)}
 .phone .view{position:absolute; left:12px; right:12px; top:16px; bottom:62px; border-radius:10px; background:#e6ebf5}
 .phone .flash{position:absolute; inset:0; background:#fff; opacity:0}
-.photo{position:absolute; left:33px; top:262px; width:84px; height:64px; border-radius:10px; background:#fff; border:4px solid var(--ink); overflow:hidden; opacity:0}
-.photo::before{content:""; position:absolute; inset:0; background:linear-gradient(#9cc4ff 0 58%, #19a974 58%)}
-.photo::after{content:""; position:absolute; right:10px; top:8px; width:16px; height:16px; border-radius:50%; background:var(--yellow)}
+/* 날아가는 사진: 네모난 사진 안에 고양이 */
+.photo{position:absolute; left:37px; top:256px; width:76px; height:76px; padding:5px 5px 13px; border-radius:8px; background:#fff; border:4px solid var(--ink); opacity:0}
+.photo svg{display:block; width:100%; height:100%; border-radius:3px}
+.photo .eye{transform-box:fill-box; transform-origin:center; animation:blink 4.8s infinite}
+@keyframes blink{0%,44%{transform:scaleY(1)} 47%{transform:scaleY(.1)} 50%,82%{transform:scaleY(1)} 85%{transform:scaleY(.1)} 88%,100%{transform:scaleY(1)}}
 .check{position:absolute; right:-14px; top:-8px; width:60px; height:60px; border-radius:50%; background:var(--ok); border:5px solid var(--ink); transform:scale(0)}
 .check::after{content:""; position:absolute; left:17px; top:11px; width:14px; height:24px; border:solid #fff; border-width:0 6px 6px 0; transform:rotate(42deg)}
 
@@ -78,7 +80,7 @@ a{color:inherit}
 .check{animation:pop 4.8s infinite}
 @keyframes pop{0%,66%{transform:scale(0)} 72%{transform:scale(1.2)} 78%,92%{transform:scale(1)} 100%{transform:scale(0)}}
 @media (prefers-reduced-motion:reduce){
-  .hero h1 span,.phone .flash,.photo,.check{animation:none}
+  .hero h1 span,.phone .flash,.photo,.photo .eye,.check{animation:none}
   .photo{opacity:1; transform:translate(266px,-196px) scale(1.25)}
   .check{transform:scale(1)}
 }
