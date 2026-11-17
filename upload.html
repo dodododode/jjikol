@@ -7,10 +7,10 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <title>사진 올리기</title>
-  <link rel="stylesheet" href="style.css?v=28">
+  <link rel="stylesheet" href="style.css?v=33">
 </head>
 <body>
-<div class="wrap">
+<div class="wrap app">
   <header class="top">
     <h1><a href="index.html?home=1"><i></i><span class="app-name">찍올</span></a></h1>
     <a href="pc.html">PC에서 받기</a>
@@ -18,12 +18,11 @@
 
   <div class="notice bad" id="bootMsg" hidden></div>
 
-  <section class="panel">
-    <div class="muted">내 코드 (PC에서 한 번만 입력하면 됩니다)</div>
-    <div class="codebox">
-      <div class="code" id="code">····-····</div>
-      <button class="linkbtn" id="copyCode" type="button">코드 복사</button>
-    </div>
+  <!-- 내 코드: 눈으로 확인하고 복사만 하면 되므로 작게 -->
+  <section class="codebar">
+    <span class="lab">내 코드</span>
+    <b class="code" id="code">····-····</b>
+    <button class="linkbtn" id="copyCode" type="button">복사</button>
   </section>
 
   <!-- 처음 화면: 위는 사진 보관함, 아래는 사진 촬영. 사진을 고른 뒤에는 작은 버튼 두 개로 줄어듭니다. -->
@@ -31,12 +30,10 @@
     <label for="fileInput" class="pick main">
       <svg class="ico" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="11" width="34" height="28" rx="6"/><path d="M11 5h26a6 6 0 0 1 6 6v20"/><circle cx="15" cy="21" r="3"/><path d="M5 33l9-8 8 6 6-5 11 9"/></svg>
       <b>사진 보관함</b>
-      <small>찍어 둔 사진을 골라서 올립니다</small>
     </label>
     <label for="camInput" class="pick">
       <svg class="ico" viewBox="0 0 48 48" aria-hidden="true"><path d="M6 16a5 5 0 0 1 5-5h4l3-5h12l3 5h4a5 5 0 0 1 5 5v18a5 5 0 0 1-5 5H11a5 5 0 0 1-5-5z"/><circle cx="24" cy="25" r="8"/></svg>
       <b>사진 촬영</b>
-      <small>지금 찍어서 바로 올립니다</small>
     </label>
     <!-- label for 방식만 사용. 자바스크립트로 click()을 호출하지 않습니다. -->
     <input id="camInput" class="file-hidden" type="file" accept="image/*" capture="environment">
@@ -49,7 +46,7 @@
       <span class="muted" id="sumSub"></span>
     </div>
     <div class="bar"><i id="barFill"></i></div>
-    <p class="muted" style="margin:10px 0 0">올리기 전에 사진을 누르면 마스킹할 수 있습니다.</p>
+    <p class="muted" style="margin:10px 0 0">올리기 전에 사진을 누르면 마스킹할 수 있습니다. 올리는 동안에는 화면을 켜 두세요.</p>
     <div class="grid" id="grid"></div>
     <div class="stack" style="margin-top:14px">
       <button class="btn go" id="uploadBtn" type="button" disabled>올리기</button>
@@ -57,10 +54,8 @@
     </div>
   </section>
 
-  <p class="muted" style="margin-top:18px">
-    올리는 동안에는 이 화면을 켜 두세요. 개인정보나 민감한 자료가 담긴 사진은 올리지 마세요.
-  </p>
-  <p class="muted" style="text-align:center; font-size:13px"><a href="index.html?home=1" style="color:inherit">홈페이지 보기</a> · <a href="privacy.html" style="color:inherit">개인정보처리방침</a> · <a href="#" id="newCode" style="color:inherit">코드 바꾸기</a> · 버전 15</p>
+  <p class="muted" style="margin-top:18px; text-align:center">개인정보나 민감한 내용이 없는지 확인하고 올려 주세요.</p>
+  <p class="muted" style="text-align:center; font-size:13px"><a href="index.html?home=1" style="color:inherit">홈페이지 보기</a> · <a href="privacy.html" style="color:inherit">개인정보처리방침</a> · <a href="#" id="newCode" style="color:inherit">코드 바꾸기</a> · 버전 20</p>
 </div>
 
 <!-- 가리기 화면 -->
@@ -86,7 +81,7 @@
   </div>
 </div>
 
-<script src="config.js?v=28"></script>
+<script src="config.js?v=33"></script>
 <script>
   // 앱 본체(app.js)가 8초 안에 뜨지 않으면 안내
   window.__booted = false;
@@ -99,6 +94,6 @@
   }, 8000);
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
 </script>
-<script type="module" src="app.js?v=28"></script>
+<script type="module" src="app.js?v=33"></script>
 </body>
 </html>

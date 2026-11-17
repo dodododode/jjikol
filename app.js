@@ -56,7 +56,7 @@ $("copyCode").addEventListener("click", async () => {
     } catch (e2) {}
   }
   btn.textContent = ok ? "복사됨" : "복사 실패";
-  setTimeout(() => { btn.textContent = "코드 복사"; }, 1500);
+  setTimeout(() => { btn.textContent = "복사"; }, 1500);
 });
 // 코드 바꾸기 (코드가 다른 사람에게 알려졌을 때)
 $("newCode").addEventListener("click", (e) => {
