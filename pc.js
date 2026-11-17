@@ -42,6 +42,8 @@ const fmtTime = (t) => {
 };
 const RETRY = "폰에서 다시 올려주세요";
 
+// 목록은 곧바로 띄우고, 사진마다 정보와 미리보기를 따로 채웁니다.
+// 미리보기는 폰이 함께 올려 둔 작은 사진(_t_로 시작)을 씁니다. 원본은 받을 때만 내려받습니다.
 async function load() {
   if (!configured || !code || busy) return;
   $("listPanel").hidden = false;
@@ -52,26 +54,41 @@ async function load() {
   $("count").textContent = "불러오는 중…";
   try {
     const res = await listAll(ref(storage, "u/" + code));
-    photos = await Promise.all(res.items.map(async (r) => {
-      const [m, url] = await Promise.all([getMetadata(r), getDownloadURL(r)]);
-      const size = Number(m.size);
-      return {
-        ref: r, url, size, time: m.timeCreated, checked: false,
-        name: (m.customMetadata && m.customMetadata.originalName) || r.name,
-        bad: size === 0 ? "잘못 올라간 사진 · " + RETRY : ""
-      };
-    }));
-    photos.sort((a, b) => (a.time < b.time ? 1 : -1));
+    const previews = new Map(), originals = [];
+    res.items.forEach((r) => (r.name.startsWith("_t_") ? previews.set(r.name, r) : originals.push(r)));
+    // 파일 이름이 올린 시각으로 시작하므로, 이름 순서가 곧 올린 순서입니다. (최근 것이 앞)
+    originals.sort((x, y) => (x.name < y.name ? 1 : -1));
+    photos = originals.map((r) => {
+      const key = "_t_" + r.name + ".jpg";
+      const p = { ref: r, preview: previews.get(key) || null, name: r.name, size: null, time: "", checked: false, bad: "" };
+      previews.delete(key);
+      return p;
+    });
+    // 원본이 이미 지워진 미리보기는 정리합니다.
+    previews.forEach((r) => deleteObject(r).catch(() => {}));
     render();
+    photos.forEach((p) => {
+      p.meta = getMetadata(p.ref).then((m) => {
+        p.size = Number(m.size); p.time = m.timeCreated;
+        p.name = (m.customMetadata && m.customMetadata.originalName) || p.ref.name;
+        if (p.size === 0) p.bad = "잘못 올라간 사진 · " + RETRY;
+        if (p.el) { p.el.querySelector(".nm").textContent = p.name; paintInfo(p); }
+      }).catch(() => { p.size = -1; if (p.el) paintInfo(p); });
+    });
   } catch (e) {
     console.error(e);
     $("count").textContent = "불러오지 못했습니다. (" + (e.code || e.message) + ")";
   }
 }
+function removeFromServer(p) {
+  return deleteObject(p.ref).then(() => { if (p.preview) deleteObject(p.preview).catch(() => {}); });
+}
 
 function paintInfo(p) {
   const mt = p.el.querySelector(".info > div:last-child");
   if (p.bad) { mt.className = "bad"; mt.textContent = p.bad; p.el.style.borderColor = "#b3261e"; }
+  else if (p.size == null) { mt.className = "mt"; mt.textContent = "불러오는 중…"; }
+  else if (p.size < 0) { mt.className = "mt"; mt.textContent = "정보를 불러오지 못했습니다"; }
   else { mt.className = "mt"; mt.textContent = fmtSize(p.size) + " · " + fmtTime(p.time); p.el.style.borderColor = ""; }
 }
 function render() {
@@ -80,12 +97,18 @@ function render() {
   photos.forEach((p) => {
     const el = document.createElement("div");
     el.className = "card";
-    el.innerHTML = '<div class="pic"><img loading="lazy" alt=""><input type="checkbox" aria-label="선택"></div>' +
+    el.innerHTML = '<div class="pic"><img alt=""><input type="checkbox" aria-label="선택"></div>' +
       '<div class="info"><div class="nm"></div><div class="mt"></div></div><button type="button">받기</button>';
     const img = el.querySelector("img");
-    img.addEventListener("error", () => { if (!p.bad) { p.bad = "사진이 열리지 않음 · " + RETRY; paintInfo(p); } });
-    img.src = p.url;
-    el.querySelector(".nm").textContent = p.name;
+    // 미리보기가 있으면 그것을, 없으면(예전에 올린 사진) 원본을 보여줍니다.
+    let usingPreview = !!p.preview;
+    const show = (r) => getDownloadURL(r).then((u) => { img.src = u; });
+    img.addEventListener("error", () => {
+      if (usingPreview) { usingPreview = false; show(p.ref).catch(() => {}); }
+      else if (!p.bad) { p.bad = "사진이 열리지 않음 · " + RETRY; paintInfo(p); }
+    });
+    show(p.preview || p.ref).catch(() => { if (usingPreview) { usingPreview = false; show(p.ref).catch(() => {}); } });
+    el.querySelector(".nm").textContent = "";
     const box = el.querySelector("input");
     p.el = el;
     p.toggle = (v) => { p.checked = v; box.checked = v; el.classList.toggle("sel", v); updateBar(); };
@@ -136,7 +159,9 @@ function saveBlob(blob, filename) {
 }
 // 서버에서 읽어 온 크기가 올릴 때 크기와 같아야 "제대로 받은 것"으로 봅니다.
 async function fetchPhoto(p) {
+  await p.meta; // 크기 정보가 올 때까지 기다립니다
   if (p.size === 0) throw new Error("empty");
+  if (p.size < 0) throw new Error("no-info");
   const blob = await getBlob(p.ref);
   if (blob.size !== p.size) throw new Error("size-mismatch");
   return blob;
@@ -185,7 +210,7 @@ async function receive(list, asZip) {
   let removed = 0;
   if (saved && good.length) {
     btn.textContent = "서버에서 지우는 중…";
-    await Promise.all(good.map((p) => deleteObject(p.ref).then(() => {
+    await Promise.all(good.map((p) => removeFromServer(p).then(() => {
       removed++;
       p.el.remove();
       photos.splice(photos.indexOf(p), 1);
@@ -217,7 +242,7 @@ $("delSel").addEventListener("click", async () => {
   const sel = photos.filter((p) => p.checked);
   if (!sel.length || !confirm(`선택한 ${sel.length}장을 받지 않고 서버에서 지울까요? 되돌릴 수 없습니다.`)) return;
   const failed = [];
-  await Promise.all(sel.map((p) => deleteObject(p.ref).catch(() => failed.push(p))));
+  await Promise.all(sel.map((p) => removeFromServer(p).catch(() => failed.push(p))));
   if (failed.length) alert(`${failed.length}장은 지우지 못했습니다.`);
   load();
 });

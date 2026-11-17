@@ -1,6 +1,6 @@
 // 폰 화면: 사진을 찍거나 골라서 올립니다.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getStorage, ref, uploadBytesResumable, deleteObject }
+import { getStorage, ref, uploadBytesResumable, uploadBytes, deleteObject }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 
 const APP = window.APP;
@@ -378,6 +378,21 @@ async function runOne(it) {
   refresh();
   pump();
 }
+// 작은 미리보기 사진(긴 쪽 360px)을 만들어 원본 옆에 올립니다. 실패해도 원본 올리기에는 영향이 없습니다.
+async function uploadPreview(file, objectName) {
+  try {
+    const src = await loadPicture(file);
+    const w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
+    const k = Math.min(1, 360 / Math.max(w, h));
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+    c.getContext("2d").drawImage(src, 0, 0, c.width, c.height);
+    if (src.close) src.close();
+    const blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.7));
+    if (!blob || !blob.size) return;
+    await uploadBytes(ref(storage, `u/${code}/_t_${objectName}.jpg`), blob, { contentType: "image/jpeg" });
+  } catch (e) { console.warn("미리보기 올리기 실패", e); }
+}
 async function uploadWithRetry(it) {
   let lastErr;
   for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
@@ -402,6 +417,7 @@ async function uploadWithRetry(it) {
         await deleteObject(r).catch(() => {});
         throw new Error("size-mismatch");
       }
+      await uploadPreview(it.file, r.name); // PC 목록이 빨리 뜨도록 작은 미리보기도 올립니다
       return;
     } catch (e) {
       lastErr = e;
