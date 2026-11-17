@@ -382,22 +382,36 @@ details.legal:not([open]) summary::after{content:"자세히"; margin-left:10px; 
 .s3 .m-up{animation:s3tap 7s linear infinite}
 @keyframes s3f{0%{opacity:0} 4%,11%{opacity:1} 15%,100%{opacity:0}}
 @keyframes s3tap{0%,7%{filter:none} 8%,11%{filter:brightness(1.5)} 13%,100%{filter:none}}
-@keyframes s3bar{0%,14%{width:0} 74%,94%{width:100%; opacity:1} 100%{width:100%; opacity:0}}
-@keyframes s3t1{0%,73%{opacity:1} 75%,97%{opacity:0} 100%{opacity:1}}
-@keyframes s3t2{0%,73%{opacity:0} 76%,94%{opacity:1} 98%,100%{opacity:0}}
+@keyframes s3bar{0%,14%{width:0} 68%,94%{width:100%; opacity:1} 100%{width:100%; opacity:0}}
+@keyframes s3t1{0%,76%{opacity:1} 78%,97%{opacity:0} 100%{opacity:1}}
+@keyframes s3t2{0%,76%{opacity:0} 79%,94%{opacity:1} 98%,100%{opacity:0}}
+.s3 .m-tile:nth-child(1){animation:s3x1 7s ease-in infinite}
 .s3 .m-tile:nth-child(1)::after{animation-name:s3c1}
-@keyframes s3c1{0%,20%{transform:scale(0); opacity:1} 23%{transform:scale(1.25)} 26%,94%{transform:scale(1); opacity:1} 100%{transform:scale(1); opacity:0}}
+@keyframes s3c1{0%,18%{transform:scale(0)} 21%{transform:scale(1.25)} 23%,96%{transform:scale(1)} 97%,100%{transform:scale(0)}}
+@keyframes s3x1{0%,26%{opacity:1; transform:none} 31%,96%{opacity:0; transform:scale(.5)} 100%{opacity:1; transform:none}}
+.s3 .m-tile:nth-child(2){animation:s3x2 7s ease-in infinite}
 .s3 .m-tile:nth-child(2)::after{animation-name:s3c2}
-@keyframes s3c2{0%,30%{transform:scale(0); opacity:1} 33%{transform:scale(1.25)} 36%,94%{transform:scale(1); opacity:1} 100%{transform:scale(1); opacity:0}}
+@keyframes s3c2{0%,27%{transform:scale(0)} 30%{transform:scale(1.25)} 32%,96%{transform:scale(1)} 97%,100%{transform:scale(0)}}
+@keyframes s3x2{0%,35%{opacity:1; transform:none} 40%,96%{opacity:0; transform:scale(.5)} 100%{opacity:1; transform:none}}
+.s3 .m-tile:nth-child(3){animation:s3x3 7s ease-in infinite}
 .s3 .m-tile:nth-child(3)::after{animation-name:s3c3}
-@keyframes s3c3{0%,40%{transform:scale(0); opacity:1} 43%{transform:scale(1.25)} 46%,94%{transform:scale(1); opacity:1} 100%{transform:scale(1); opacity:0}}
+@keyframes s3c3{0%,36%{transform:scale(0)} 39%{transform:scale(1.25)} 41%,96%{transform:scale(1)} 97%,100%{transform:scale(0)}}
+@keyframes s3x3{0%,44%{opacity:1; transform:none} 49%,96%{opacity:0; transform:scale(.5)} 100%{opacity:1; transform:none}}
+.s3 .m-tile:nth-child(4){animation:s3x4 7s ease-in infinite}
 .s3 .m-tile:nth-child(4)::after{animation-name:s3c4}
-@keyframes s3c4{0%,50%{transform:scale(0); opacity:1} 53%{transform:scale(1.25)} 56%,94%{transform:scale(1); opacity:1} 100%{transform:scale(1); opacity:0}}
+@keyframes s3c4{0%,45%{transform:scale(0)} 48%{transform:scale(1.25)} 50%,96%{transform:scale(1)} 97%,100%{transform:scale(0)}}
+@keyframes s3x4{0%,53%{opacity:1; transform:none} 58%,96%{opacity:0; transform:scale(.5)} 100%{opacity:1; transform:none}}
+.s3 .m-tile:nth-child(5){animation:s3x5 7s ease-in infinite}
 .s3 .m-tile:nth-child(5)::after{animation-name:s3c5}
-@keyframes s3c5{0%,60%{transform:scale(0); opacity:1} 63%{transform:scale(1.25)} 66%,94%{transform:scale(1); opacity:1} 100%{transform:scale(1); opacity:0}}
+@keyframes s3c5{0%,54%{transform:scale(0)} 57%{transform:scale(1.25)} 59%,96%{transform:scale(1)} 97%,100%{transform:scale(0)}}
+@keyframes s3x5{0%,62%{opacity:1; transform:none} 67%,96%{opacity:0; transform:scale(.5)} 100%{opacity:1; transform:none}}
+.s3 .m-tile:nth-child(6){animation:s3x6 7s ease-in infinite}
 .s3 .m-tile:nth-child(6)::after{animation-name:s3c6}
-@keyframes s3c6{0%,70%{transform:scale(0); opacity:1} 73%{transform:scale(1.25)} 76%,94%{transform:scale(1); opacity:1} 100%{transform:scale(1); opacity:0}}
-
+@keyframes s3c6{0%,63%{transform:scale(0)} 66%{transform:scale(1.25)} 68%,96%{transform:scale(1)} 97%,100%{transform:scale(0)}}
+@keyframes s3x6{0%,71%{opacity:1; transform:none} 76%,96%{opacity:0; transform:scale(.5)} 100%{opacity:1; transform:none}}
+.s3 .m-tiles{position:relative}
+.m-done{position:absolute; left:50%; top:50%; width:56px; height:56px; margin:-28px 0 0 -28px; display:grid; place-items:center; border-radius:50%; background:var(--ok); color:#fff; font-size:30px; font-weight:900; transform:scale(0); animation:s3done 7s linear infinite}
+@keyframes s3done{0%,77%{transform:scale(0); opacity:1} 81%{transform:scale(1.2)} 84%,94%{transform:scale(1); opacity:1} 98%,100%{transform:scale(1); opacity:0}}
 .m-cards{position:relative}
 .m-input span{display:inline-block}
 .s4 .m-input span{animation:s4type 8s steps(9) infinite}
@@ -429,5 +443,6 @@ details.legal:not([open]) summary::after{content:"자세히"; margin-left:10px; 
 @media (prefers-reduced-motion:reduce){
   .mock *,.mock *::after{animation:none !important}
   .s3 .m-tile::after{transform:scale(1)}
+  .m-done{display:none}
   .s3 .m-bar i{width:100%}
 }
